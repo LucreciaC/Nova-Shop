@@ -1,0 +1,632 @@
+:root {
+  --primary: #6C5CE7;
+  --primary-hover: #5A4AD1;
+  --secondary: #8B7CFF;
+  --accent: #22C55E;
+  --bg: #F7F7FB;
+  --surface: #FFFFFF;
+  --text: #1F2937;
+  --text-muted: #6B7280;
+  --border: #E5E7EB;
+  --danger: #EF4444;
+  --warning: #F59E0B;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background-color: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button {
+  font-family: inherit;
+}
+
+.nexo-container {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+/* Navbar */
+.nexo-navbar {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+
+.nexo-navbar-inner {
+  height: 76px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+.nexo-logo {
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  display: flex;
+  align-items: baseline;
+  gap: 0.25rem;
+  cursor: pointer;
+}
+
+.nexo-logo span {
+  font-weight: 400;
+  color: var(--primary);
+}
+
+.nexo-nav-links {
+  display: none;
+  gap: 2rem;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+@media (min-width: 900px) {
+  .nexo-nav-links {
+    display: flex;
+  }
+}
+
+.nexo-nav-link {
+  cursor: pointer;
+  transition: color 0.15s ease;
+  padding: 0.25rem 0;
+  border-bottom: 2px solid transparent;
+}
+
+.nexo-nav-link:hover,
+.nexo-nav-link.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+}
+
+.nexo-search-box {
+  flex: 1;
+  max-width: 340px;
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.nexo-search-input {
+  width: 100%;
+  background: #F3F4F8;
+  border: 1px solid transparent;
+  border-radius: 9999px;
+  padding: 0.6rem 1rem 0.6rem 2.5rem;
+  font-size: 0.9rem;
+  color: var(--text);
+  transition: all 0.2s ease;
+}
+
+.nexo-search-input:focus {
+  outline: none;
+  background: var(--surface);
+  border-color: var(--secondary);
+  box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.12);
+}
+
+.nexo-search-icon {
+  position: absolute;
+  left: 0.9rem;
+  color: #9CA3AF;
+  pointer-events: none;
+}
+
+.nexo-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.nexo-icon-btn {
+  position: relative;
+  width: 42px;
+  height: 42px;
+  border-radius: 9999px;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.nexo-icon-btn:hover {
+  background: #F3F4F8;
+  color: var(--primary);
+}
+
+.nexo-cart-badge {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  background: var(--primary);
+  color: #FFFFFF;
+  font-size: 0.7rem;
+  font-weight: 700;
+  min-width: 19px;
+  height: 19px;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  border: 2px solid var(--surface);
+}
+
+/* Hero Banner */
+.nexo-hero {
+  margin-top: 1.5rem;
+  border-radius: 1.5rem;
+  background: radial-gradient(circle at 75% 35%, #3B336A 0%, #19172E 55%, #0F0E1C 100%);
+  color: #FFFFFF;
+  padding: 2.75rem 3rem;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 20px 40px -15px rgba(25, 23, 46, 0.35);
+}
+
+@media (min-width: 860px) {
+  .nexo-hero {
+    grid-template-columns: 1.15fr 0.85fr;
+    min-height: 360px;
+  }
+}
+
+.nexo-hero-title {
+  font-size: clamp(2rem, 4vw, 3.1rem);
+  font-weight: 800;
+  line-height: 1.12;
+  letter-spacing: -0.025em;
+  margin-bottom: 1rem;
+}
+
+.nexo-hero-subtitle {
+  font-size: 1.05rem;
+  color: #D1D5DB;
+  max-width: 420px;
+  margin-bottom: 1.85rem;
+}
+
+.nexo-btn-primary {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+  color: #FFFFFF;
+  border: none;
+  border-radius: 0.75rem;
+  padding: 0.8rem 1.5rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, opacity 0.15s ease;
+  box-shadow: 0 8px 20px -4px rgba(108, 92, 231, 0.45);
+}
+
+.nexo-btn-primary:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 24px -4px rgba(108, 92, 231, 0.55);
+}
+
+.nexo-btn-primary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.nexo-btn-outline {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
+  padding: 0.75rem 1.25rem;
+  font-size: 0.92rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.nexo-btn-outline:hover:not(:disabled) {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: #F5F3FF;
+}
+
+/* Trust Strip */
+.nexo-trust-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 1rem;
+  margin: 1.75rem 0;
+  padding: 0.5rem 0;
+}
+
+.nexo-trust-item {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.65rem 1rem;
+}
+
+.nexo-trust-icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 0.75rem;
+  background: #EDE9FE;
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Categories Row */
+.nexo-categories {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2.25rem;
+}
+
+.nexo-cat-card {
+  background: #F1F0FB;
+  border: 1px solid transparent;
+  border-radius: 1rem;
+  padding: 1.15rem 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-weight: 600;
+  font-size: 0.92rem;
+  color: var(--text);
+}
+
+.nexo-cat-card:hover,
+.nexo-cat-card.active {
+  background: #FFFFFF;
+  border-color: var(--primary);
+  color: var(--primary);
+  box-shadow: 0 8px 20px -6px rgba(108, 92, 231, 0.2);
+  transform: translateY(-2px);
+}
+
+/* Product Cards Grid */
+.nexo-section-title {
+  font-size: 1.45rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  margin-bottom: 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.nexo-products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1.35rem;
+  margin-bottom: 2.25rem;
+}
+
+.nexo-product-card {
+  background: var(--surface);
+  border: 1px solid #ECEEF5;
+  border-radius: 1.25rem;
+  padding: 1.15rem;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.nexo-product-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 32px -12px rgba(31, 41, 55, 0.12);
+  border-color: #DCD7FE;
+}
+
+.nexo-fav-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 34px;
+  height: 34px;
+  border-radius: 9999px;
+  background: #FFFFFF;
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #6B7280;
+  z-index: 2;
+  transition: all 0.15s ease;
+}
+
+.nexo-fav-btn:hover,
+.nexo-fav-btn.active {
+  color: #EF4444;
+  border-color: #FECACA;
+  background: #FEF2F2;
+}
+
+.nexo-product-illust {
+  height: 170px;
+  border-radius: 0.9rem;
+  background: linear-gradient(180deg, #F8F7FF 0%, #F1F0FB 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+}
+
+.nexo-product-title {
+  font-size: 1.02rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 0.2rem;
+  cursor: pointer;
+}
+
+.nexo-product-title:hover {
+  color: var(--primary);
+}
+
+.nexo-product-sub {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin-bottom: 1rem;
+  min-height: 2.4em;
+}
+
+.nexo-product-footer {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.nexo-product-price {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.nexo-cart-add-btn {
+  width: 42px;
+  height: 40px;
+  border-radius: 0.65rem;
+  background: var(--primary);
+  color: #FFFFFF;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+
+.nexo-cart-add-btn:hover:not(:disabled) {
+  background: var(--primary-hover);
+  transform: scale(1.04);
+}
+
+.nexo-cart-add-btn:disabled {
+  background: #D1D5DB;
+  cursor: not-allowed;
+}
+
+/* Promo Banner */
+.nexo-promo-banner {
+  background: linear-gradient(90deg, #EDE9FE 0%, #DDD6FE 100%);
+  border-radius: 1.15rem;
+  padding: 1.35rem 1.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 2.5rem;
+}
+
+/* Slide-over Cart Drawer & Modals */
+.nexo-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(17, 24, 39, 0.45);
+  backdrop-filter: blur(3px);
+  z-index: 60;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.nexo-drawer {
+  width: 100%;
+  max-width: 430px;
+  background: var(--surface);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  box-shadow: -15px 0 35px rgba(0, 0, 0, 0.15);
+  animation: slideInRight 0.22s ease-out;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.nexo-modal-center {
+  position: fixed;
+  inset: 0;
+  background: rgba(17, 24, 39, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 70;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+}
+
+.nexo-modal-card {
+  background: var(--surface);
+  border-radius: 1.5rem;
+  width: 100%;
+  max-width: 440px;
+  padding: 2.25rem 2rem;
+  text-align: center;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+}
+
+/* Quantity Stepper */
+.nexo-qty-stepper {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: 0.6rem;
+  background: #F9FAFB;
+  overflow: hidden;
+}
+
+.nexo-qty-btn {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.nexo-qty-btn:hover {
+  background: #EDE9FE;
+  color: var(--primary);
+}
+
+.nexo-qty-value {
+  min-width: 32px;
+  text-align: center;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+/* Auth Card */
+.nexo-auth-wrapper {
+  min-height: calc(100vh - 120px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1rem;
+}
+
+.nexo-auth-card {
+  background: var(--surface);
+  border-radius: 1.5rem;
+  border: 1px solid #ECEEF5;
+  width: 100%;
+  max-width: 430px;
+  padding: 2.5rem 2.25rem;
+  box-shadow: 0 20px 40px -15px rgba(31, 41, 55, 0.08);
+}
+
+.nexo-input-group {
+  position: relative;
+  margin-bottom: 1rem;
+}
+
+.nexo-input-icon {
+  position: absolute;
+  left: 0.95rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #9CA3AF;
+}
+
+.nexo-input {
+  width: 100%;
+  padding: 0.78rem 1rem 0.78rem 2.65rem;
+  border-radius: 0.75rem;
+  border: 1px solid var(--border);
+  background: #F9FAFB;
+  font-size: 0.92rem;
+  color: var(--text);
+  transition: all 0.15s ease;
+}
+
+.nexo-input:focus {
+  outline: none;
+  background: var(--surface);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.12);
+}
+
+/* SOA Telemetry Bar */
+.nexo-soa-bar {
+  background: #131124;
+  color: #CBD5E1;
+  font-size: 0.75rem;
+  padding: 0.45rem 0;
+}
+
+.nexo-soa-inner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.nexo-code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  background: rgba(255, 255, 255, 0.1);
+  color: #E2E8F0;
+  padding: 0.1rem 0.4rem;
+  border-radius: 0.3rem;
+}

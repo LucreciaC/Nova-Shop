@@ -1,0 +1,156 @@
+version: '3.9'
+
+services:
+  # ---------------------------------------------------------------------------
+  # 1. Base de Datos de Usuarios (MongoDB - RI-04, DRV-03)
+  # ---------------------------------------------------------------------------
+  mongodb:
+    image: mongo:7
+    container_name: novashop-mongodb
+    restart: unless-stopped
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - identidad_net
+
+  # ---------------------------------------------------------------------------
+  # 2. Servicio de Identidad en Servidor Separado (Node.js + Express - RI-02, RI-03, RI-05)
+  # ---------------------------------------------------------------------------
+  identity-service:
+    build:
+      context: ./identity-service
+    container_name: novashop-identity-service
+    restart: unless-stopped
+    environment:
+      - PORT=3001
+      - MONGO_URI=mongodb://mongodb:27017/novashop_identidad
+      - ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
+      - ADMIN_EMAIL=${ADMIN_EMAIL:-admin@uch.edu.ar}
+      - ADMIN_NOMBRE=${ADMIN_NOMBRE:-Administrador UCH-FyD}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-}
+    ports:
+      - '3001:3001'
+    depends_on:
+      - mongodb
+    networks:
+      - identidad_net
+      - soa_gateway_net
+
+  # ---------------------------------------------------------------------------
+  # 3. Base de Datos Relacional de Artículos y Pedidos (PostgreSQL - RI-07, DRV-05)
+  # ---------------------------------------------------------------------------
+  postgres:
+    image: postgres:16-alpine
+    container_name: novashop-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=novashop_ventas
+    ports:
+      - '5432:5432'
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    networks:
+      - ventas_net
+
+  # ---------------------------------------------------------------------------
+  # 4. Servidor de Ventas - Instancia 1 (NestJS: Catálogo y Pedidos - ADR-01, ADR-03, ADR-07)
+  # ---------------------------------------------------------------------------
+  ventas-service-1:
+    build:
+      context: ./ventas-service
+    container_name: novashop-ventas-1
+    restart: unless-stopped
+    environment:
+      - PORT=3002
+      - INSTANCE_NAME=ventas-instance-1
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/novashop_ventas
+      - IDENTITY_JWKS_URL=http://identity-service:3001/api/v1/auth/jwks
+    ports:
+      - '3002:3002'
+    depends_on:
+      - postgres
+      - identity-service
+    networks:
+      - ventas_net
+      - soa_gateway_net
+
+  # ---------------------------------------------------------------------------
+  # 5. Servidor de Ventas - Instancia 2 (Escalamiento Horizontal - ADR-01)
+  # ---------------------------------------------------------------------------
+  ventas-service-2:
+    build:
+      context: ./ventas-service
+    container_name: novashop-ventas-2
+    restart: unless-stopped
+    environment:
+      - PORT=3003
+      - INSTANCE_NAME=ventas-instance-2
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/novashop_ventas
+      - IDENTITY_JWKS_URL=http://identity-service:3001/api/v1/auth/jwks
+    ports:
+      - '3003:3003'
+    depends_on:
+      - postgres
+      - identity-service
+    networks:
+      - ventas_net
+      - soa_gateway_net
+
+  # ---------------------------------------------------------------------------
+  # 6. API Gateway (Punto Único de Entrada + Circuit Breaker + JWT + LB - ADR-04, ADR-05)
+  # ---------------------------------------------------------------------------
+  api-gateway:
+    build:
+      context: ./api-gateway
+    container_name: novashop-api-gateway
+    restart: unless-stopped
+    environment:
+      - PORT=8080
+      - IDENTITY_SERVICE_URL=http://identity-service:3001
+      - VENTAS_SERVICE_URLS=http://ventas-service-1:3002,http://ventas-service-2:3003
+    ports:
+      - '8080:8080'
+    depends_on:
+      - identity-service
+      - ventas-service-1
+      - ventas-service-2
+    networks:
+      - soa_gateway_net
+
+  # ---------------------------------------------------------------------------
+  # 7. Aplicación Web Cliente (Next.js - RI-08, RNF-01)
+  # ---------------------------------------------------------------------------
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        - NEXT_PUBLIC_API_GATEWAY_URL=http://localhost:8080
+    container_name: novashop-frontend
+    restart: unless-stopped
+    environment:
+      - NEXT_PUBLIC_API_GATEWAY_URL=http://localhost:8080
+    ports:
+      - '3000:3000'
+    depends_on:
+      - api-gateway
+    networks:
+      - soa_gateway_net
+
+networks:
+  # Red aislada para MongoDB e Identidad (Ventas NO tiene acceso a MongoDB - pág. 67)
+  identidad_net:
+    driver: bridge
+  # Red aislada para PostgreSQL y Ventas
+  ventas_net:
+    driver: bridge
+  # Red SOA de comunicación entre Gateway, Identidad y Ventas
+  soa_gateway_net:
+    driver: bridge
+
+volumes:
+  mongo_data:
+  pg_data:
