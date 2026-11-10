@@ -2,7 +2,7 @@ import './globals.css';
 import { StoreProvider } from '../context/StoreContext';
 
 export const metadata = {
-  title: 'NEXO Store — Tecnología que te conecta (UCH-FyD SOA)',
+  title: 'NOVA Shop — Tecnología que te conecta (UCH-FyD SOA)',
   description: 'Tienda online con Arquitectura Orientada a Servicios (SOA) - Universidad Champagnat',
 };
 

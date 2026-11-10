@@ -95,14 +95,14 @@ export default function LoginPage() {
 
       <div className="nexo-auth-wrapper">
         <div className="nexo-auth-card">
-          {/* Logo Centrado NEXO Store */}
+          {/* Logo Centrado NOVA Shop */}
           <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
             <Link
               href="/"
               className="nexo-logo"
               style={{ justifyContent: 'center', fontSize: '1.75rem' }}
             >
-              NEXO <span>Store</span>
+              NOVA <span>Shop</span>
             </Link>
             <h1
               style={{

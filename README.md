@@ -1,4 +1,4 @@
-# NEXO Store (NOVA Shop) — UCH-FyD
+# NOVA Shop — UCH-FyD
 
 **Universidad Champagnat — Facultad de Informática y Diseño**  
 **Licenciatura en Sistemas de Información — Cátedra: Arquitectura de Sistemas**  
@@ -9,7 +9,7 @@
 
 ## Descripción General
 
-**NEXO Store (NOVA Shop)** es la implementación del MVP correspondiente a la arquitectura diseñada en los **TP1, TP2 y TP3-1** para la empresa **UCH-FyD**. Consiste en una plataforma de comercio electrónico basada en una **Arquitectura Orientada a Servicios (SOA)** que permite el registro de usuarios, la activación de cuentas por parte de un administrador, la consulta y administración de un catálogo de artículos y la confirmación consistente e idempotente de pedidos ante compras concurrentes.
+**NOVA Shop** es la implementación del MVP correspondiente a la arquitectura diseñada en los **TP1, TP2 y TP3-1** para la empresa **UCH-FyD**. Consiste en una plataforma de comercio electrónico basada en una **Arquitectura Orientada a Servicios (SOA)** que permite el registro de usuarios, la activación de cuentas por parte de un administrador, la consulta y administración de un catálogo de artículos y la confirmación consistente e idempotente de pedidos ante compras concurrentes.
 
 ### Documentación Adicional del Proyecto
 
@@ -122,7 +122,7 @@ NOVA Shop/
 │       └── pedidos/                 # Módulo de Pedidos (Controller, Service, PedidoRepository, Transacción SQL)
 ├── frontend/                        # Aplicación Web en Next.js (:3000)
 │   ├── app/
-│   │   ├── page.js                  # Inicio NEXO Store (Hero, categorías, destacados, buscador)
+│   │   ├── page.js                  # Inicio NOVA Shop (Hero, categorías, destacados, buscador)
 │   │   ├── login/page.js            # Inicio de sesión y registro de nuevos usuarios
 │   │   ├── producto/[codigo]/page.js# Vista detallada de producto en grande
 │   │   ├── pedidos/page.js          # Historial y comprobante individual de pedidos

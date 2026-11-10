@@ -1,7 +1,7 @@
 const openapiSpecification = {
   openapi: '3.0.3',
   info: {
-    title: 'UCH-FyD (NEXO / NOVA Shop) — Contrato SOA Unificado',
+    title: 'NOVA Shop (UCH-FyD) — Contrato SOA Unificado',
     version: '1.0.0',
     description:
       'Contrato estandarizado OpenAPI 3 de los servicios de Identidad, Catálogo y Pedidos expuestos a través del API Gateway bajo el prefijo /api/v1 (TP3-1 Sección 2 y 3).',

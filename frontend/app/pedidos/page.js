@@ -129,7 +129,7 @@ export default function MisPedidosPage() {
                       ✓ Confirmado
                     </span>
                     <strong style={{ fontSize: '1.1rem' }}>
-                      Pedido #NX-{p.numero}
+                      Pedido #NV-{p.numero}
                     </strong>
                     <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
                       {new Date(p.fecha).toLocaleString('es-AR')}
@@ -234,7 +234,7 @@ export default function MisPedidosPage() {
           <div className="nexo-modal-card" style={{ maxWidth: 520, textAlign: 'left' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
               <h3 style={{ fontSize: '1.3rem', fontWeight: 800 }}>
-                Detalle del Pedido #NX-{pedidoDetalleModal.numero}
+                Detalle del Pedido #NV-{pedidoDetalleModal.numero}
               </h3>
               <button
                 className="nexo-icon-btn"

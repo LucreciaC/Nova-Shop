@@ -44,12 +44,12 @@ export default function Navbar() {
 
   return (
     <>
-      {/* Navbar Principal estilo NEXO Store */}
+      {/* Navbar Principal NOVA Shop */}
       <header className="nexo-navbar">
         <div className="nexo-container nexo-navbar-inner">
           {/* Logo */}
           <Link href="/" className="nexo-logo">
-            NEXO <span>Store</span>
+            NOVA <span>Shop</span>
           </Link>
 
           {/* Links de Navegación */}
@@ -338,7 +338,7 @@ export default function Navbar() {
               }}
             >
               <div className="nexo-logo" style={{ fontSize: '1.25rem' }}>
-                NEXO <span>Store</span>
+                NOVA <span>Shop</span>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                 <div style={{ position: 'relative', padding: '0.4rem' }}>
@@ -607,7 +607,7 @@ export default function Navbar() {
                 marginBottom: '0.5rem',
               }}
             >
-              N.° de pedido: #NX-{confirmedOrderModal.numero}
+              N.° de pedido: #NV-{confirmedOrderModal.numero}
             </p>
 
             <p

@@ -19,8 +19,8 @@ const assert = require('assert');
 const crypto = require('crypto');
 
 const GATEWAY_URL = process.env.GATEWAY_URL || 'http://localhost:8080';
-const ADMIN_USERNAME = process.env.ADMIN_USERNAME;
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'TuClaveAdminSegura';
 
 async function api(path, options = {}) {
   const traceId = crypto.randomUUID();

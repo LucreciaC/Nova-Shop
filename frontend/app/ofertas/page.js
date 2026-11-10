@@ -62,7 +62,7 @@ export default function OfertasPage() {
                 marginBottom: '0.75rem',
               }}
             >
-              PROMOCIONES EXCLUSIVAS NEXO STORE
+              PROMOCIONES EXCLUSIVAS NOVA SHOP
             </span>
             <h1 style={{ fontSize: '2.2rem', fontWeight: 800, marginBottom: '0.4rem' }}>
               Ofertas especiales de la semana

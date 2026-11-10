@@ -12,7 +12,7 @@ const crypto = require('crypto');
 
 const GATEWAY_URL = process.env.GATEWAY_URL || 'http://localhost:8080';
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || 'admin';
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'TuClaveAdminSegura';
 
 async function request(path, options = {}) {
   const traceId = crypto.randomUUID();
@@ -187,6 +187,13 @@ async function runTests() {
     console.log(`   -> Respuesta idempotente: HTTP ${replay.res.status} | Pedido devuelto: #${replay.data.numero} (Mismo que #${compra1.data.numero})`);
     console.log(`   -> Stock de A-1001 tras reintento: ${artDespuesReplay.data.stock} unidad (No volvió a descontar stock)\n`);
   }
+
+  // 7. Restaurar stock de A-1001 a 5 unidades para dejar el entorno listo para demostración en vivo
+  await request('/api/v1/articulos/A-1001/stock', {
+    method: 'PATCH',
+    headers: { Authorization: `Bearer ${adminToken}` },
+    body: JSON.stringify({ stock: 5 }),
+  });
 
   console.log('===================================================================');
   console.log(' TODAS LAS VERIFICACIONES ARQUITECTÓNICAS FINALIZARON CON ÉXITO');

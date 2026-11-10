@@ -138,7 +138,7 @@ export default function AdminPage() {
       <main className="nexo-container" style={{ padding: '2.25rem 1.5rem 4rem' }}>
         <div className="nexo-section-title">
           <div>
-            <h1>Panel de Administración — NEXO Store</h1>
+            <h1>Panel de Administración — NOVA Shop</h1>
             <p style={{ fontSize: '0.9rem', fontWeight: 400, color: 'var(--text-muted)' }}>
               Activación de usuarios (MongoDB) y administración de catálogo y stock (PostgreSQL)
             </p>
