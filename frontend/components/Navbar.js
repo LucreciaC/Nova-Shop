@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useStore } from '../context/StoreContext';
+import NovaAIAssistant from './NovaAIAssistant';
 import { formatARS, ProductIllustration } from './ProductVisuals';
 
 export default function Navbar() {
@@ -647,6 +648,9 @@ export default function Navbar() {
           </div>
         </div>
       )}
+
+      {/* Asistente Inteligente NOVA AI */}
+      <NovaAIAssistant />
     </>
   );
 }

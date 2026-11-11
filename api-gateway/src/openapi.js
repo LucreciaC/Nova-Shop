@@ -312,6 +312,37 @@ const openapiSpecification = {
         },
       },
     },
+    '/ia/asistente': {
+      post: {
+        tags: ['Inteligencia Artificial (NOVA AI)'],
+        summary: 'Asistente de compras con IA y recomendación en tiempo real sobre el catálogo (RAG)',
+        parameters: [{ $ref: '#/components/parameters/TraceIdHeader' }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['mensaje'],
+                properties: {
+                  mensaje: {
+                    type: 'string',
+                    example: 'Busco algo para gaming por menos de $150.000',
+                  },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description:
+              'Respuesta generada por IA junto con la lista de artículos recomendados verificados con stock en PostgreSQL.',
+          },
+          503: { description: 'Servicio de catálogo temporalmente no disponible (Circuit Breaker).' },
+        },
+      },
+    },
   },
 };
 

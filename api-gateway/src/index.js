@@ -6,6 +6,7 @@ const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const CircuitBreaker = require('./circuit-breaker');
 const openapiSpecification = require('./openapi');
+const { procesarConsultaAsistenteIA } = require('./ai-assistant');
 
 const app = express();
 app.use(
@@ -352,6 +353,47 @@ app.all('/api/v1/articulos*', validateJwtMiddleware, (req, res) => {
 app.all('/api/v1/pedidos*', validateJwtMiddleware, (req, res) => {
   const target = getNextVentasInstanceUrl();
   return proxyRequest(req, res, target, ventasBreaker);
+});
+
+/**
+ * Servicio de Inteligencia Artificial SOA (/api/v1/ia/asistente)
+ * Consulta en tiempo real el catálogo de Ventas vía Circuit Breaker + Load Balancer y aplica RAG
+ */
+app.post('/api/v1/ia/asistente', async (req, res) => {
+  try {
+    const mensaje = req.body?.mensaje || '';
+    const target = getNextVentasInstanceUrl();
+
+    const resultado = await procesarConsultaAsistenteIA({
+      mensaje,
+      obtenerCatalogoFn: async () => {
+        const upstreamRes = await ventasBreaker.execute((signal) =>
+          fetch(`${target}/api/v1/articulos`, {
+            headers: { 'X-Trace-ID': req.traceId },
+            signal,
+          }),
+        );
+        const ventasInstance = upstreamRes.headers.get('x-ventas-instance');
+        if (ventasInstance) {
+          res.setHeader('X-Ventas-Instance', ventasInstance);
+        }
+        const data = await upstreamRes.json();
+        return Array.isArray(data) ? data : [];
+      },
+    });
+
+    res.setHeader('X-Circuit-State', ventasBreaker.state);
+    return res.status(200).json({
+      ...resultado,
+      traceId: req.traceId,
+    });
+  } catch (err) {
+    return res.status(503).json({
+      error: 'Service Unavailable',
+      message: `El asistente IA no pudo consultar el catálogo en este momento: ${err.message}`,
+      traceId: req.traceId,
+    });
+  }
 });
 
 app.listen(PORT, () => {

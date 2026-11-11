@@ -112,6 +112,7 @@ services:
       - PORT=8080
       - IDENTITY_SERVICE_URL=http://identity-service:3001
       - VENTAS_SERVICE_URLS=http://ventas-service-1:3002,http://ventas-service-2:3003
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
     ports:
       - '8080:8080'
     depends_on:
