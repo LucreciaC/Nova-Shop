@@ -306,9 +306,23 @@ const openapiSpecification = {
           { name: 'numero', in: 'path', required: true, schema: { type: 'integer', example: 15432 } },
         ],
         responses: {
-          200: { description: 'Detalle del pedido y sus líneas.' },
+          200: { description: 'Detalle del pedido y sus líneas (incluye sello criptográfico Blockchain).' },
           403: { description: 'El pedido pertenece a otro usuario.' },
           404: { description: 'Pedido no encontrado.' },
+        },
+      },
+    },
+    '/pedidos/blockchain/ledger': {
+      get: {
+        tags: ['Blockchain Ledger (SUP-05)'],
+        summary: 'Verificar la integridad criptográfica de la cadena de bloques de pedidos (SHA-256 + PoW)',
+        security: [{ bearerAuth: [] }],
+        responses: {
+          200: {
+            description:
+              'Devuelve la cadena completa desde el Bloque Génesis (#0) validando el encadenamiento previous_hash -> block_hash.',
+          },
+          401: { description: 'No autenticado.' },
         },
       },
     },

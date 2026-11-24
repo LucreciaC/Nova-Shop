@@ -73,6 +73,8 @@ export default function HomePage() {
     searchQuery,
     selectedCategory,
     setSelectedCategory,
+    showOnlyFavorites,
+    setShowOnlyFavorites,
     usuario,
     apiRequest,
     showToast,
@@ -85,6 +87,9 @@ export default function HomePage() {
   }, []);
 
   const articulosFiltrados = articulos.filter((art) => {
+    if (showOnlyFavorites && !favoritos.includes(art.codigo)) {
+      return false;
+    }
     const meta = getProductCategoryAndSpecs(art);
     const matchesCategory =
       selectedCategory === 'Todas' || meta.categoria === selectedCategory;
@@ -139,22 +144,55 @@ export default function HomePage() {
       <Navbar />
 
       <main className="nexo-container" style={{ paddingBottom: '4rem' }}>
-        {/* 1. Hero Banner Principal ("Tecnología que te conecta") */}
-        <section className="nexo-hero">
+        {!showOnlyFavorites && (
+          <>
+            {/* 1. Hero Banner Principal ("Tecnología que te conecta") */}
+            <section className="nexo-hero">
           <div style={{ zIndex: 2 }}>
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                background: 'rgba(139, 124, 255, 0.18)',
+                border: '1px solid rgba(139, 124, 255, 0.35)',
+                color: '#DDD6FE',
+                padding: '0.35rem 0.9rem',
+                borderRadius: '9999px',
+                fontSize: '0.78rem',
+                fontWeight: 700,
+                marginBottom: '1rem',
+              }}
+            >
+              <span>✨ NUEVA TEMPORADA TECH</span>
+              <span>·</span>
+              <span>Envíos gratis y garantía oficial</span>
+            </div>
             <h1 className="nexo-hero-title">
               Tecnología
               <br />
               que te conecta
             </h1>
             <p className="nexo-hero-subtitle">
-              Descubrí los mejores productos al mejor precio.
+              Equipamiento premium de informática, audio y gaming con disponibilidad en tiempo real y compras 100% protegidas.
             </p>
             <div style={{ display: 'flex', gap: '0.85rem', flexWrap: 'wrap' }}>
               <a href="#catalogo" className="nexo-btn-primary">
-                <span>Ver catálogo</span>
+                <span>Explorar catálogo</span>
                 <span>→</span>
               </a>
+              <button
+                type="button"
+                className="nexo-btn-outline"
+                style={{
+                  background: 'rgba(255,255,255,0.08)',
+                  color: '#FFFFFF',
+                  borderColor: 'rgba(255,255,255,0.2)',
+                }}
+                onClick={() => router.push('/ofertas')}
+              >
+                Ver ofertas hasta 20% OFF
+              </button>
             </div>
           </div>
 
@@ -179,14 +217,19 @@ export default function HomePage() {
             <div
               style={{
                 cursor: 'pointer',
-                transform: 'rotate(-8deg)',
-                filter: 'drop-shadow(0 25px 30px rgba(0,0,0,0.55))',
+                width: 240,
+                height: 240,
+                borderRadius: '1.5rem',
+                overflow: 'hidden',
+                transform: 'rotate(-5deg)',
+                border: '3px solid rgba(255,255,255,0.2)',
+                boxShadow: '0 25px 40px rgba(0,0,0,0.55)',
               }}
               onClick={() => router.push('/producto/A-1001')}
             >
               <ProductIllustration
                 articulo={{ codigo: 'A-1001', nombre: 'Auriculares Bluetooth' }}
-                size={230}
+                size={240}
               />
             </div>
           </div>
@@ -312,30 +355,39 @@ export default function HomePage() {
             })}
           </div>
         </section>
+          </>
+        )}
 
         {/* 4. Grilla de Productos Destacados */}
-        <section id="catalogo">
+        <section id="catalogo" style={{ paddingTop: showOnlyFavorites ? '2rem' : 0 }}>
           <div className="nexo-section-title">
             <div>
               <span>
-                {selectedCategory === 'Todas'
+                {showOnlyFavorites
+                  ? `❤️ Mis Favoritos (${articulosFiltrados.length})`
+                  : selectedCategory === 'Todas'
                   ? 'Destacados'
                   : `Categoría: ${selectedCategory}`}
               </span>
-              {selectedCategory !== 'Todas' && (
+              {(selectedCategory !== 'Todas' || showOnlyFavorites) && (
                 <button
-                  onClick={() => setSelectedCategory('Todas')}
+                  onClick={() => {
+                    setSelectedCategory('Todas');
+                    setShowOnlyFavorites(false);
+                  }}
                   style={{
                     marginLeft: '0.85rem',
-                    fontSize: '0.82rem',
-                    fontWeight: 600,
+                    fontSize: '0.84rem',
+                    fontWeight: 700,
                     color: 'var(--primary)',
-                    background: 'none',
+                    background: '#EDE9FE',
                     border: 'none',
+                    padding: '0.3rem 0.75rem',
+                    borderRadius: '9999px',
                     cursor: 'pointer',
                   }}
                 >
-                  Ver todos
+                  Ver todo el catálogo
                 </button>
               )}
             </div>
@@ -356,15 +408,18 @@ export default function HomePage() {
               }}
             >
               <p style={{ color: 'var(--text-muted)', marginBottom: '1rem' }}>
-                No encontramos productos para tu búsqueda.
+                {showOnlyFavorites
+                  ? 'Todavía no marcaste ningún producto con el corazón ❤️.'
+                  : 'No encontramos productos para tu búsqueda.'}
               </p>
               <button
                 className="nexo-btn-outline"
                 onClick={() => {
                   setSelectedCategory('Todas');
+                  setShowOnlyFavorites(false);
                 }}
               >
-                Restablecer filtros
+                Ver todos los productos
               </button>
             </div>
           ) : (
@@ -400,6 +455,45 @@ export default function HomePage() {
                       onClick={() => router.push(`/producto/${art.codigo}`)}
                     >
                       <ProductIllustration articulo={art} size={130} />
+                      <div
+                        style={{
+                          position: 'absolute',
+                          top: '0.6rem',
+                          left: '0.65rem',
+                          display: 'flex',
+                          gap: '0.35rem',
+                          alignItems: 'center',
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontSize: '0.68rem',
+                            fontWeight: 700,
+                            padding: '0.18rem 0.55rem',
+                            borderRadius: '9999px',
+                            background: '#FFFFFF',
+                            color: 'var(--primary)',
+                            boxShadow: '0 2px 6px rgba(0,0,0,0.06)',
+                          }}
+                        >
+                          {meta.categoria}
+                        </span>
+                        {meta.enOferta && (
+                          <span
+                            style={{
+                              fontSize: '0.68rem',
+                              fontWeight: 800,
+                              padding: '0.18rem 0.55rem',
+                              borderRadius: '9999px',
+                              background: '#22C55E',
+                              color: '#FFFFFF',
+                              boxShadow: '0 2px 6px rgba(34,197,94,0.3)',
+                            }}
+                          >
+                            -{meta.descuentoPct}% OFF
+                          </span>
+                        )}
+                      </div>
                       <span
                         style={{
                           position: 'absolute',
@@ -407,34 +501,78 @@ export default function HomePage() {
                           left: '0.65rem',
                           fontSize: '0.7rem',
                           fontWeight: 700,
-                          padding: '0.15rem 0.5rem',
+                          padding: '0.15rem 0.55rem',
                           borderRadius: '9999px',
                           background: sinStock ? '#FEE2E2' : '#DCFCE7',
                           color: sinStock ? '#991B1B' : '#166534',
                         }}
                       >
-                        {sinStock ? 'Sin stock' : `Stock: ${art.stock}`}
+                        {sinStock ? 'Agotado' : `${art.stock} disponibles`}
                       </span>
                     </div>
 
-                    {/* Nombre y Subtítulo */}
+                    {/* Nombre, Rating y Subtítulo */}
                     <div
-                      className="nexo-product-title"
-                      onClick={() => router.push(`/producto/${art.codigo}`)}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: '0.5rem',
+                        marginBottom: '0.2rem',
+                      }}
                     >
-                      {art.nombre}
-                    </div>
-                    <div className="nexo-product-sub">
-                      {meta.subtituloCorto} ·{' '}
-                      <span style={{ fontFamily: 'monospace', fontSize: '0.76rem' }}>
-                        {art.codigo}
+                      <div
+                        className="nexo-product-title"
+                        style={{ marginBottom: 0 }}
+                        onClick={() => router.push(`/producto/${art.codigo}`)}
+                      >
+                        {art.nombre}
+                      </div>
+                      <span
+                        style={{
+                          fontSize: '0.76rem',
+                          fontWeight: 700,
+                          color: '#F59E0B',
+                          flexShrink: 0,
+                        }}
+                      >
+                        ★ {meta.rating}
                       </span>
                     </div>
+                    <div className="nexo-product-sub" style={{ marginBottom: '0.65rem' }}>
+                      {meta.subtituloCorto}
+                    </div>
 
-                    {/* Precio y Botón Violeta de Carrito */}
+                    {/* Precio, Cuotas y Botón Violeta de Carrito */}
                     <div className="nexo-product-footer">
-                      <div className="nexo-product-price">
-                        {formatARS(art.precioUnitario)}
+                      <div>
+                        {meta.enOferta && (
+                          <div
+                            style={{
+                              fontSize: '0.76rem',
+                              color: 'var(--text-muted)',
+                              textDecoration: 'line-through',
+                              lineHeight: 1.1,
+                            }}
+                          >
+                            {formatARS(meta.precioAnterior)}
+                          </div>
+                        )}
+                        <div
+                          className="nexo-product-price"
+                          style={{ color: meta.enOferta ? 'var(--primary)' : 'var(--text)' }}
+                        >
+                          {formatARS(art.precioUnitario)}
+                        </div>
+                        <div
+                          style={{
+                            fontSize: '0.72rem',
+                            fontWeight: 600,
+                            color: '#16A34A',
+                          }}
+                        >
+                          Envío gratis · 6 cuotas sin interés
+                        </div>
                       </div>
                       <button
                         className="nexo-cart-add-btn"

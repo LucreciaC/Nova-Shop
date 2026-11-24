@@ -195,8 +195,7 @@ export default function AdminUsuariosPage() {
                 marginTop: '0.25rem',
               }}
             >
-              RF-04: Gestión de activación de cuentas registradas en estado
-              inactivo · Vía API Gateway (<code>/api/v1/usuarios?estado=inactivo</code>)
+              Gestión y habilitación de nuevas cuentas de clientes registradas en la plataforma
             </p>
           </div>
 

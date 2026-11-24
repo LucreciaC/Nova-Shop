@@ -39,7 +39,7 @@ export default function LoginPage() {
       } else {
         guardarSesion(data.accessToken, data.usuario);
         showToast(
-          `¡Bienvenido/a ${data.usuario.nombreCliente}! Sesión SSO con JWT RS256 iniciada.`,
+          `¡Bienvenido/a ${data.usuario.nombreCliente}!`,
           'success',
         );
         if (
@@ -78,7 +78,7 @@ export default function LoginPage() {
         setErrorMsg(data.message || data.error || 'Error al registrar usuario');
       } else {
         setInfoMsg(
-          `[RF-01 / RF-02] Tu cuenta '${data.username}' fue creada en estado INACTIVO en MongoDB. Un Administrador debe activarla para que puedas ingresar.`,
+          `Tu cuenta '${data.username}' fue creada correctamente y se encuentra pendiente de activación por un Administrador.`,
         );
         setMode('login');
       }
@@ -279,7 +279,7 @@ export default function LoginPage() {
                   setInfoMsg('');
                 }}
               >
-                Registrate como nuevo usuario (RF-01 / RF-02)
+                Crear una cuenta nueva
               </button>
             </form>
           ) : (
@@ -300,7 +300,7 @@ export default function LoginPage() {
                 <input
                   type="text"
                   className="nexo-input"
-                  placeholder="Nombre de usuario único (SUP-06)"
+                  placeholder="Nombre de usuario"
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
                   required
@@ -381,9 +381,7 @@ export default function LoginPage() {
                 style={{ width: '100%', padding: '0.85rem', marginBottom: '1rem' }}
                 disabled={submitting}
               >
-                {submitting
-                  ? 'Creando cuenta...'
-                  : 'Registrarme (Estado Inactivo - RF-02)'}
+                {submitting ? 'Creando cuenta...' : 'Crear cuenta'}
               </button>
 
               <div

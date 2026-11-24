@@ -28,6 +28,9 @@ export default function Navbar() {
     setSearchQuery,
     selectedCategory,
     setSelectedCategory,
+    favoritos,
+    showOnlyFavorites,
+    setShowOnlyFavorites,
     lastTraceId,
     lastVentasInstance,
     lastCircuitState,
@@ -58,16 +61,22 @@ export default function Navbar() {
             <Link
               href="/"
               className={`nexo-nav-link ${
-                pathname === '/' && selectedCategory === 'Todas' ? 'active' : ''
+                pathname === '/' && selectedCategory === 'Todas' && !showOnlyFavorites ? 'active' : ''
               }`}
-              onClick={() => setSelectedCategory('Todas')}
+              onClick={() => {
+                setSelectedCategory('Todas');
+                setShowOnlyFavorites(false);
+              }}
             >
               Inicio
             </Link>
             <a
               href="/#catalogo"
               className="nexo-nav-link"
-              onClick={() => setSelectedCategory('Todas')}
+              onClick={() => {
+                setSelectedCategory('Todas');
+                setShowOnlyFavorites(false);
+              }}
             >
               Productos
             </a>
@@ -149,14 +158,37 @@ export default function Navbar() {
           <div className="nexo-actions">
             <button
               className="nexo-icon-btn"
-              title="Productos destacados"
-              onClick={() => router.push('/#catalogo')}
+              title={
+                showOnlyFavorites
+                  ? 'Mostrando favoritos (clic para ver todos)'
+                  : 'Ver solo mis favoritos'
+              }
+              style={{
+                background: showOnlyFavorites ? '#FEF2F2' : undefined,
+                color: showOnlyFavorites ? '#EF4444' : undefined,
+              }}
+              onClick={() => {
+                const nextState = !showOnlyFavorites;
+                setShowOnlyFavorites(nextState);
+                if (nextState) {
+                  setSelectedCategory('Todas');
+                  setSearchQuery('');
+                }
+                if (pathname !== '/') {
+                  router.push('/');
+                } else {
+                  setTimeout(() => {
+                    const el = document.getElementById('catalogo');
+                    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                  }, 50);
+                }
+              }}
             >
               <svg
                 width="22"
                 height="22"
                 viewBox="0 0 24 24"
-                fill="none"
+                fill={showOnlyFavorites ? '#EF4444' : 'none'}
                 stroke="currentColor"
                 strokeWidth="2"
                 strokeLinecap="round"
@@ -164,6 +196,14 @@ export default function Navbar() {
               >
                 <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
               </svg>
+              {favoritos.length > 0 && (
+                <span
+                  className="nexo-cart-badge"
+                  style={{ background: '#EF4444' }}
+                >
+                  {favoritos.length}
+                </span>
+              )}
             </button>
 
             <button
@@ -615,13 +655,38 @@ export default function Navbar() {
               style={{
                 fontSize: '0.88rem',
                 color: 'var(--text-muted)',
-                marginBottom: '1.25rem',
+                marginBottom: '1rem',
               }}
             >
               {confirmedOrderModal.isReplay
                 ? 'Respuesta recuperada por Idempotency-Key (ADR-09): no se volvió a descontar el stock.'
                 : `Importe total: ${formatARS(confirmedOrderModal.importeTotal)} · Stock descontado en transacción SQL.`}
             </p>
+
+            {confirmedOrderModal.blockchain && (
+              <div
+                style={{
+                  background: '#F0FDF4',
+                  border: '1px solid #BBF7D0',
+                  borderRadius: '0.85rem',
+                  padding: '0.7rem 0.9rem',
+                  marginBottom: '1.25rem',
+                  textAlign: 'left',
+                  fontSize: '0.8rem',
+                  color: '#166534',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                }}
+              >
+                <span style={{ fontWeight: 700 }}>
+                  ⛓️ Compra protegida en Blockchain
+                </span>
+                <span style={{ fontWeight: 800 }}>
+                  Bloque #{confirmedOrderModal.blockchain.blockIndex} · ✓ Verificado
+                </span>
+              </div>
+            )}
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               <button

@@ -65,6 +65,17 @@ export default function CategoriasPage() {
     cargarCatalogo();
   }, []);
 
+  useEffect(() => {
+    if (selectedCategory) {
+      setCatActiva(selectedCategory);
+    }
+  }, [selectedCategory]);
+
+  function cambiarCategoria(nuevaCat) {
+    setCatActiva(nuevaCat);
+    setSelectedCategory(nuevaCat);
+  }
+
   const productosEnCategoria = articulos.filter((art) => {
     if (catActiva === 'Todas') return true;
     return getProductCategoryAndSpecs(art).categoria === catActiva;
@@ -94,7 +105,7 @@ export default function CategoriasPage() {
           {catActiva !== 'Todas' && (
             <button
               className="nexo-btn-outline"
-              onClick={() => setCatActiva('Todas')}
+              onClick={() => cambiarCategoria('Todas')}
             >
               Ver todas las categorías ({articulos.length})
             </button>
@@ -120,7 +131,7 @@ export default function CategoriasPage() {
               <div
                 key={cat.id}
                 onClick={() =>
-                  setCatActiva(seleccionada ? 'Todas' : cat.id)
+                  cambiarCategoria(seleccionada ? 'Todas' : cat.id)
                 }
                 style={{
                   background: seleccionada ? '#F5F3FF' : 'var(--surface)',
@@ -240,21 +251,44 @@ export default function CategoriasPage() {
                   onClick={() => router.push(`/producto/${art.codigo}`)}
                 >
                   <ProductIllustration articulo={art} size={130} />
-                  <span
+                  <div
                     style={{
                       position: 'absolute',
                       top: '0.6rem',
                       left: '0.6rem',
-                      fontSize: '0.7rem',
-                      fontWeight: 700,
-                      padding: '0.15rem 0.55rem',
-                      borderRadius: '9999px',
-                      background: '#EDE9FE',
-                      color: 'var(--primary)',
+                      display: 'flex',
+                      gap: '0.35rem',
+                      alignItems: 'center',
                     }}
                   >
-                    {meta.categoria}
-                  </span>
+                    <span
+                      style={{
+                        fontSize: '0.68rem',
+                        fontWeight: 700,
+                        padding: '0.18rem 0.55rem',
+                        borderRadius: '9999px',
+                        background: '#FFFFFF',
+                        color: 'var(--primary)',
+                        boxShadow: '0 2px 6px rgba(0,0,0,0.06)',
+                      }}
+                    >
+                      {meta.categoria}
+                    </span>
+                    {meta.enOferta && (
+                      <span
+                        style={{
+                          fontSize: '0.68rem',
+                          fontWeight: 800,
+                          padding: '0.18rem 0.55rem',
+                          borderRadius: '9999px',
+                          background: '#22C55E',
+                          color: '#FFFFFF',
+                        }}
+                      >
+                        -{meta.descuentoPct}% OFF
+                      </span>
+                    )}
+                  </div>
                   <span
                     style={{
                       position: 'absolute',
@@ -262,32 +296,76 @@ export default function CategoriasPage() {
                       left: '0.65rem',
                       fontSize: '0.7rem',
                       fontWeight: 700,
-                      padding: '0.15rem 0.5rem',
+                      padding: '0.15rem 0.55rem',
                       borderRadius: '9999px',
                       background: sinStock ? '#FEE2E2' : '#DCFCE7',
                       color: sinStock ? '#991B1B' : '#166534',
                     }}
                   >
-                    {sinStock ? 'Sin stock' : `Stock: ${art.stock}`}
+                    {sinStock ? 'Agotado' : `${art.stock} disponibles`}
                   </span>
                 </div>
 
                 <div
-                  className="nexo-product-title"
-                  onClick={() => router.push(`/producto/${art.codigo}`)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '0.5rem',
+                    marginBottom: '0.2rem',
+                  }}
                 >
-                  {art.nombre}
-                </div>
-                <div className="nexo-product-sub">
-                  {meta.subtituloCorto} ·{' '}
-                  <span style={{ fontFamily: 'monospace', fontSize: '0.76rem' }}>
-                    {art.codigo}
+                  <div
+                    className="nexo-product-title"
+                    style={{ marginBottom: 0 }}
+                    onClick={() => router.push(`/producto/${art.codigo}`)}
+                  >
+                    {art.nombre}
+                  </div>
+                  <span
+                    style={{
+                      fontSize: '0.76rem',
+                      fontWeight: 700,
+                      color: '#F59E0B',
+                      flexShrink: 0,
+                    }}
+                  >
+                    ★ {meta.rating}
                   </span>
+                </div>
+                <div className="nexo-product-sub" style={{ marginBottom: '0.65rem' }}>
+                  {meta.subtituloCorto}
                 </div>
 
                 <div className="nexo-product-footer">
-                  <div className="nexo-product-price">
-                    {formatARS(art.precioUnitario)}
+                  <div>
+                    {meta.enOferta && (
+                      <div
+                        style={{
+                          fontSize: '0.76rem',
+                          color: 'var(--text-muted)',
+                          textDecoration: 'line-through',
+                          lineHeight: 1.1,
+                        }}
+                      >
+                        {formatARS(meta.precioAnterior)}
+                      </div>
+                    )}
+                    <div
+                      className="nexo-product-price"
+                      style={{ color: meta.enOferta ? 'var(--primary)' : 'var(--text)' }}
+                    >
+                      {formatARS(art.precioUnitario)}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: '0.72rem',
+                        fontWeight: 600,
+                        color: '#16A34A',
+                      }}
+                    >
+                      Envío gratis · 6 cuotas sin interés
+                    </div>
                   </div>
                   <button
                     className="nexo-cart-add-btn"

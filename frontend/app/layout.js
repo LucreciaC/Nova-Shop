@@ -1,9 +1,10 @@
 import './globals.css';
+import Footer from '../components/Footer';
 import { StoreProvider } from '../context/StoreContext';
 
 export const metadata = {
-  title: 'NOVA Shop — Tecnología que te conecta (UCH-FyD SOA)',
-  description: 'Tienda online con Arquitectura Orientada a Servicios (SOA) - Universidad Champagnat',
+  title: 'NOVA Shop — Tecnología que te conecta',
+  description: 'Tienda oficial de tecnología y equipamiento de alto rendimiento',
 };
 
 export default function RootLayout({ children }) {
@@ -17,8 +18,11 @@ export default function RootLayout({ children }) {
           rel="stylesheet"
         />
       </head>
-      <body>
-        <StoreProvider>{children}</StoreProvider>
+      <body style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+        <StoreProvider>
+          <div style={{ flex: 1 }}>{children}</div>
+          <Footer />
+        </StoreProvider>
       </body>
     </html>
   );

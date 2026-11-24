@@ -34,6 +34,7 @@ export function StoreProvider({ children }) {
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('Todas');
+  const [showOnlyFavorites, setShowOnlyFavorites] = useState(false);
 
   // Telemetría SOA (X-Trace-ID, Idempotency-Key, Load Balancer, Circuit Breaker)
   const [lastTraceId, setLastTraceId] = useState('-');
@@ -80,6 +81,17 @@ export function StoreProvider({ children }) {
       localStorage.setItem('nexo_favs', JSON.stringify(favoritos));
     } catch (_) {}
   }, [favoritos]);
+
+  // Limpiar de favoritos cualquier código viejo que ya no exista en el catálogo actual
+  useEffect(() => {
+    if (articulos.length > 0 && favoritos.length > 0) {
+      const codigosValidos = new Set(articulos.map((a) => a.codigo));
+      const limpios = favoritos.filter((cod) => codigosValidos.has(cod));
+      if (limpios.length !== favoritos.length) {
+        setFavoritos(limpios);
+      }
+    }
+  }, [articulos]);
 
   function showToast(text, type = 'info') {
     setToast({ text, type });
@@ -181,6 +193,22 @@ export function StoreProvider({ children }) {
   }
 
   function agregarAlCarrito(articulo, cantidad = 1, abrirDrawer = true) {
+    const stockDisponible = Number(articulo.stock ?? 0);
+    if (stockDisponible <= 0) {
+      showToast(`El producto "${articulo.nombre}" está agotado.`, 'warning');
+      return;
+    }
+
+    const itemEnCarrito = carrito.find((i) => i.codigoArticulo === articulo.codigo);
+    const cantidadActual = itemEnCarrito ? Number(itemEnCarrito.cantidad) : 0;
+    if (cantidadActual + Number(cantidad) > stockDisponible) {
+      showToast(
+        `Solo hay ${stockDisponible} unidades disponibles de "${articulo.nombre}".`,
+        'warning',
+      );
+      return;
+    }
+
     setCarrito((prev) => {
       const existente = prev.find((i) => i.codigoArticulo === articulo.codigo);
       if (existente) {
@@ -211,6 +239,14 @@ export function StoreProvider({ children }) {
   function actualizarCantidadCarrito(codigo, nuevaCantidad) {
     if (nuevaCantidad <= 0) {
       eliminarDelCarrito(codigo);
+      return;
+    }
+    const artEnCatalogo = articulos.find((a) => a.codigo === codigo);
+    if (artEnCatalogo && Number(nuevaCantidad) > Number(artEnCatalogo.stock)) {
+      showToast(
+        `Stock máximo alcanzado: solo quedan ${artEnCatalogo.stock} unidades de "${artEnCatalogo.nombre}".`,
+        'warning',
+      );
       return;
     }
     setCarrito((prev) =>
@@ -326,6 +362,8 @@ export function StoreProvider({ children }) {
         setSearchQuery,
         selectedCategory,
         setSelectedCategory,
+        showOnlyFavorites,
+        setShowOnlyFavorites,
         lastTraceId,
         lastVentasInstance,
         lastCircuitState,

@@ -1,9 +1,68 @@
 'use client';
 
+import { useState } from 'react';
+
 /**
- * Ilustraciones vectoriales de alta resolución estilo e-commerce moderno (NEXO Store)
- * Detecta el tipo de producto por su código o nombre y renderiza el gráfico correspondiente.
+ * Catálogo visual con fotografías reales de alta definición (Unsplash) + fallback SVG
+ * para cada producto del catálogo de NOVA Shop.
  */
+const PRODUCT_PHOTOS = {
+  'A-1001': [
+    'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=800&q=85',
+    'https://images.unsplash.com/photo-1583394838336-acd977736f90?auto=format&fit=crop&w=800&q=85',
+    'https://images.unsplash.com/photo-1484704849700-f032a568e944?auto=format&fit=crop&w=800&q=85',
+  ],
+  'A-1002': [
+    'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?auto=format&fit=crop&w=800&q=85',
+    'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=800&q=85',
+    'https://images.unsplash.com/photo-1525547719571-a2d4ac8945e2?auto=format&fit=crop&w=800&q=85',
+  ],
+  'A-1003': [
+    'https://images.unsplash.com/photo-1587829741301-dc798b83add3?auto=format&fit=crop&w=800&q=85',
+    'https://images.unsplash.com/photo-1595225476474-87563907a212?auto=format&fit=crop&w=800&q=85',
+    'https://images.unsplash.com/photo-1618384887929-16ec33fab9ef?auto=format&fit=crop&w=800&q=85',
+  ],
+  'A-1004': [
+    'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=800&q=85',
+    'https://images.unsplash.com/photo-1579586337278-3befd40fd17a?auto=format&fit=crop&w=800&q=85',
+    'https://images.unsplash.com/photo-1508685096489-7aacd43bd3b1?auto=format&fit=crop&w=800&q=85',
+  ],
+  'A-1005': [
+    'https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?auto=format&fit=crop&w=800&q=85',
+    'https://images.unsplash.com/photo-1615663245857-ac93bb7c39e7?auto=format&fit=crop&w=800&q=85',
+    'https://images.unsplash.com/photo-1605773527852-c546a8584ea3?auto=format&fit=crop&w=800&q=85',
+  ],
+  'A-1006': [
+    'https://images.unsplash.com/photo-1589003077984-894e133dabab?auto=format&fit=crop&w=800&q=85',
+    'https://images.unsplash.com/photo-1545454675-3531b543be5d?auto=format&fit=crop&w=800&q=85',
+    'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?auto=format&fit=crop&w=800&q=85',
+  ],
+  'A-1007': [
+    'https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?auto=format&fit=crop&w=800&q=85',
+    'https://images.unsplash.com/photo-1585792180666-f7347c490ee2?auto=format&fit=crop&w=800&q=85',
+    'https://images.unsplash.com/photo-1547119957-637f8679db1e?auto=format&fit=crop&w=800&q=85',
+  ],
+  'A-1008': [
+    'https://images.unsplash.com/photo-1507473885765-e6ed057f782c?auto=format&fit=crop&w=800&q=85',
+    'https://images.unsplash.com/photo-1513506003901-1e6a229e2d15?auto=format&fit=crop&w=800&q=85',
+    'https://images.unsplash.com/photo-1540932239986-30128078f3c5?auto=format&fit=crop&w=800&q=85',
+  ],
+  'A-1009': [
+    'https://images.unsplash.com/photo-1583863788434-e58a36330cf0?auto=format&fit=crop&w=800&q=85',
+    'https://images.unsplash.com/photo-1625842268584-8f3296236761?auto=format&fit=crop&w=800&q=85',
+    'https://images.unsplash.com/photo-1585338107529-13afc5f02586?auto=format&fit=crop&w=800&q=85',
+  ],
+};
+
+const PHOTOS_BY_TYPE = {
+  headphones: PRODUCT_PHOTOS['A-1001'],
+  laptop: PRODUCT_PHOTOS['A-1002'],
+  keyboard: PRODUCT_PHOTOS['A-1003'],
+  smartwatch: PRODUCT_PHOTOS['A-1004'],
+  mouse: PRODUCT_PHOTOS['A-1005'],
+  speaker: PRODUCT_PHOTOS['A-1006'],
+};
+
 export function getProductCategoryAndSpecs(articulo) {
   const codigo = (articulo?.codigo || '').toUpperCase();
   const text = `${codigo} ${articulo?.nombre || ''} ${articulo?.descripcion || ''}`.toLowerCase();
@@ -56,7 +115,7 @@ export function getProductCategoryAndSpecs(articulo) {
       specs: [
         { icon: 'cpu', label: 'Alto rendimiento profesional y académico' },
         { icon: 'screen', label: 'Panel IPS de alta definición' },
-        { icon: 'bat', label: 'Garantía oficial UCH-FyD' },
+        { icon: 'bat', label: 'Garantía oficial NOVA Shop' },
       ],
       type: 'laptop',
     };
@@ -147,113 +206,37 @@ export function formatARS(amount) {
 }
 
 export function ProductIllustration({ articulo, size = 120, variant = 0 }) {
+  const [imgError, setImgError] = useState(false);
+  const codigo = (articulo?.codigo || '').toUpperCase();
   const { type } = getProductCategoryAndSpecs(articulo);
 
-  if (type === 'headphones') {
-    const angle = variant === 1 ? 'rotate(-12 100 100)' : variant === 2 ? 'scale(0.88)' : '';
+  const photosList = PRODUCT_PHOTOS[codigo] || PHOTOS_BY_TYPE[type] || PRODUCT_PHOTOS['A-1001'];
+  const photoUrl = photosList[variant % photosList.length];
+
+  if (!imgError && photoUrl) {
     return (
-      <svg width={size} height={size} viewBox="0 0 200 200" fill="none">
-        <defs>
-          <linearGradient id="hpBand" x1="30" y1="20" x2="170" y2="180" gradientUnits="userSpaceOnUse">
-            <stop stopColor="#4F46E5" />
-            <stop offset="0.5" stopColor="#312E81" />
-            <stop offset="1" stopColor="#1E1B4B" />
-          </linearGradient>
-          <linearGradient id="hpCup" x1="0" y1="0" x2="1" y2="1">
-            <stop stopColor="#6C5CE7" />
-            <stop offset="1" stopColor="#2E266D" />
-          </linearGradient>
-        </defs>
-        <g transform={angle} style={{ transformOrigin: 'center' }}>
-          <path
-            d="M45 112C45 64 69 32 100 32C131 32 155 64 155 112"
-            stroke="url(#hpBand)"
-            strokeWidth="16"
-            strokeLinecap="round"
-          />
-          <rect x="30" y="96" width="32" height="58" rx="16" fill="url(#hpCup)" />
-          <rect x="44" y="102" width="14" height="46" rx="7" fill="#1F2937" />
-          <rect x="138" y="96" width="32" height="58" rx="16" fill="url(#hpCup)" />
-          <rect x="142" y="102" width="14" height="46" rx="7" fill="#1F2937" />
-          <circle cx="154" cy="125" r="7" fill="#8B7CFF" fillOpacity="0.4" />
-        </g>
-      </svg>
+      <img
+        src={photoUrl}
+        alt={articulo?.nombre || 'Producto NOVA Shop'}
+        onError={() => setImgError(true)}
+        style={{
+          width: '100%',
+          height: '100%',
+          maxWidth: size <= 64 ? size : '100%',
+          maxHeight: size <= 64 ? size : '100%',
+          objectFit: 'cover',
+          borderRadius: size <= 64 ? '0.5rem' : '0.75rem',
+          display: 'block',
+        }}
+      />
     );
   }
 
-  if (type === 'laptop') {
-    return (
-      <svg width={size} height={size} viewBox="0 0 200 200" fill="none">
-        <defs>
-          <linearGradient id="lapScreen" x1="35" y1="45" x2="165" y2="135" gradientUnits="userSpaceOnUse">
-            <stop stopColor="#8B7CFF" />
-            <stop offset="0.5" stopColor="#6C5CE7" />
-            <stop offset="1" stopColor="#1E1B4B" />
-          </linearGradient>
-        </defs>
-        <rect x="36" y="46" width="128" height="84" rx="8" fill="#1F2937" stroke="#374151" strokeWidth="4" />
-        <rect x="42" y="52" width="116" height="72" rx="4" fill="url(#lapScreen)" />
-        <path d="M42 110L95 72L158 105V124H42V110Z" fill="#A5B4FC" fillOpacity="0.35" />
-        <path d="M20 132H180L168 146H32L20 132Z" fill="#9CA3AF" />
-        <rect x="82" y="132" width="36" height="4" rx="2" fill="#4B5563" />
-      </svg>
-    );
-  }
-
-  if (type === 'keyboard') {
-    return (
-      <svg width={size} height={size} viewBox="0 0 200 200" fill="none">
-        <rect x="22" y="68" width="156" height="68" rx="10" fill="#1F2937" stroke="#4F46E5" strokeWidth="3" />
-        <rect x="28" y="126" width="144" height="4" rx="2" fill="#EC4899" />
-        {[0, 1, 2].map((row) =>
-          [0, 1, 2, 3, 4, 5, 6, 7, 8].map((col) => (
-            <rect
-              key={`${row}-${col}`}
-              x={32 + col * 15}
-              y={76 + row * 14}
-              width="11"
-              height="10"
-              rx="2"
-              fill={col % 3 === 0 ? '#6C5CE7' : col % 2 === 0 ? '#374151' : '#8B7CFF'}
-            />
-          )),
-        )}
-        <rect x="62" y="118" width="76" height="7" rx="2" fill="#6C5CE7" />
-      </svg>
-    );
-  }
-
-  if (type === 'smartwatch') {
-    return (
-      <svg width={size} height={size} viewBox="0 0 200 200" fill="none">
-        <path d="M78 30H122L126 62H74L78 30Z" fill="#374151" />
-        <path d="M74 138H126L122 170H78L74 138Z" fill="#374151" />
-        <rect x="62" y="56" width="76" height="88" rx="20" fill="#111827" stroke="#6B7280" strokeWidth="4" />
-        <rect x="69" y="63" width="62" height="74" rx="14" fill="#1E1B4B" />
-        <circle cx="100" cy="94" r="18" stroke="#22C55E" strokeWidth="4" />
-        <path d="M100 84V94L107 99" stroke="#FFFFFF" strokeWidth="3" strokeLinecap="round" />
-        <rect x="82" y="121" width="36" height="6" rx="3" fill="#6C5CE7" />
-      </svg>
-    );
-  }
-
-  if (type === 'mouse') {
-    return (
-      <svg width={size} height={size} viewBox="0 0 200 200" fill="none">
-        <rect x="66" y="40" width="68" height="120" rx="34" fill="#1F2937" stroke="#6C5CE7" strokeWidth="4" />
-        <line x1="100" y1="42" x2="100" y2="85" stroke="#4B5563" strokeWidth="3" />
-        <rect x="95" y="56" width="10" height="20" rx="5" fill="#8B7CFF" />
-        <path d="M76 135C86 146 114 146 124 135" stroke="#22C55E" strokeWidth="4" strokeLinecap="round" />
-      </svg>
-    );
-  }
-
+  // Fallback vectorial en caso de estar sin conexión a internet
   return (
     <svg width={size} height={size} viewBox="0 0 200 200" fill="none">
-      <rect x="52" y="44" width="96" height="112" rx="24" fill="#312E81" stroke="#8B7CFF" strokeWidth="4" />
-      <circle cx="100" cy="112" r="26" fill="#1E1B4B" stroke="#6C5CE7" strokeWidth="4" />
-      <circle cx="100" cy="112" r="10" fill="#8B7CFF" />
-      <circle cx="100" cy="66" r="8" fill="#22C55E" />
+      <rect x="30" y="30" width="140" height="140" rx="28" fill="#EDE9FE" />
+      <circle cx="100" cy="100" r="38" fill="#6C5CE7" />
     </svg>
   );
 }

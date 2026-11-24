@@ -22,6 +22,7 @@ export default function ProductoDetallePage() {
     agregarAlCarrito,
     favoritos,
     toggleFavorito,
+    setSelectedCategory,
     showToast,
   } = useStore();
 
@@ -104,7 +105,13 @@ export default function ProductoDetallePage() {
             Inicio
           </Link>
           <span>›</span>
-          <span>{meta.categoria}</span>
+          <Link
+            href="/categorias"
+            onClick={() => setSelectedCategory(meta.categoria)}
+            style={{ color: 'var(--text-muted)' }}
+          >
+            {meta.categoria}
+          </Link>
           <span>›</span>
           <span style={{ color: 'var(--text)', fontWeight: 600 }}>
             {articulo.nombre}
@@ -144,22 +151,45 @@ export default function ProductoDetallePage() {
                 size={230}
                 variant={thumbVariant}
               />
-              <span
+              <div
                 style={{
                   position: 'absolute',
                   top: '1rem',
                   left: '1rem',
-                  fontSize: '0.78rem',
-                  fontWeight: 700,
-                  padding: '0.25rem 0.75rem',
-                  borderRadius: '9999px',
-                  background: '#FFFFFF',
-                  color: 'var(--primary)',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+                  display: 'flex',
+                  gap: '0.5rem',
+                  alignItems: 'center',
                 }}
               >
-                Código: {articulo.codigo}
-              </span>
+                <span
+                  style={{
+                    fontSize: '0.78rem',
+                    fontWeight: 700,
+                    padding: '0.25rem 0.75rem',
+                    borderRadius: '9999px',
+                    background: '#FFFFFF',
+                    color: 'var(--primary)',
+                    boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+                  }}
+                >
+                  {meta.categoria}
+                </span>
+                {meta.enOferta && (
+                  <span
+                    style={{
+                      fontSize: '0.78rem',
+                      fontWeight: 800,
+                      padding: '0.25rem 0.75rem',
+                      borderRadius: '9999px',
+                      background: '#22C55E',
+                      color: '#FFFFFF',
+                      boxShadow: '0 2px 8px rgba(34,197,94,0.35)',
+                    }}
+                  >
+                    -{meta.descuentoPct}% OFF
+                  </span>
+                )}
+              </div>
             </div>
 
             {/* 3 Miniaturas seleccionables como en el mockup */}
@@ -234,16 +264,59 @@ export default function ProductoDetallePage() {
               </span>
             </div>
 
-            {/* Precio grande */}
-            <div
-              style={{
-                fontSize: '2.15rem',
-                fontWeight: 800,
-                color: 'var(--text)',
-                marginBottom: '1.35rem',
-              }}
-            >
-              {formatARS(articulo.precioUnitario)}
+            {/* Precio grande con oferta coherente en toda la tienda */}
+            <div style={{ marginBottom: '1.35rem' }}>
+              {meta.enOferta && (
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.6rem',
+                    marginBottom: '0.2rem',
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: '1.05rem',
+                      color: 'var(--text-muted)',
+                      textDecoration: 'line-through',
+                    }}
+                  >
+                    {formatARS(meta.precioAnterior)}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: '0.78rem',
+                      fontWeight: 800,
+                      padding: '0.15rem 0.55rem',
+                      borderRadius: '9999px',
+                      background: '#DCFCE7',
+                      color: '#166534',
+                    }}
+                  >
+                    Ahorrás {formatARS(meta.precioAnterior - Number(articulo.precioUnitario))} (-{meta.descuentoPct}%)
+                  </span>
+                </div>
+              )}
+              <div
+                style={{
+                  fontSize: '2.15rem',
+                  fontWeight: 800,
+                  color: meta.enOferta ? 'var(--primary)' : 'var(--text)',
+                }}
+              >
+                {formatARS(articulo.precioUnitario)}
+              </div>
+              <div
+                style={{
+                  fontSize: '0.84rem',
+                  fontWeight: 600,
+                  color: '#16A34A',
+                  marginTop: '0.2rem',
+                }}
+              >
+                ✓ Envío gratis a todo el país · Hasta 6 cuotas sin interés de {formatARS(Math.round(Number(articulo.precioUnitario) / 6))}
+              </div>
             </div>
 
             {/* Fila Stepper [ - 1 + ] + Botón [ Agregar al carrito ] + Botón [ ♡ ] */}

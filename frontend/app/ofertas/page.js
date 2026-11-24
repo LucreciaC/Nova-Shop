@@ -116,22 +116,43 @@ export default function OfertasPage() {
                   onClick={() => router.push(`/producto/${art.codigo}`)}
                 >
                   <ProductIllustration articulo={art} size={130} />
-                  {/* Etiqueta de Descuento % OFF */}
-                  <span
+                  {/* Etiqueta de Categoría + Descuento % OFF */}
+                  <div
                     style={{
                       position: 'absolute',
-                      top: '0.65rem',
+                      top: '0.6rem',
                       left: '0.65rem',
-                      fontSize: '0.74rem',
-                      fontWeight: 800,
-                      padding: '0.2rem 0.6rem',
-                      borderRadius: '9999px',
-                      background: '#22C55E',
-                      color: '#FFFFFF',
+                      display: 'flex',
+                      gap: '0.35rem',
+                      alignItems: 'center',
                     }}
                   >
-                    -{meta.descuentoPct}% OFF
-                  </span>
+                    <span
+                      style={{
+                        fontSize: '0.68rem',
+                        fontWeight: 700,
+                        padding: '0.18rem 0.55rem',
+                        borderRadius: '9999px',
+                        background: '#FFFFFF',
+                        color: 'var(--primary)',
+                        boxShadow: '0 2px 6px rgba(0,0,0,0.06)',
+                      }}
+                    >
+                      {meta.categoria}
+                    </span>
+                    <span
+                      style={{
+                        fontSize: '0.68rem',
+                        fontWeight: 800,
+                        padding: '0.18rem 0.55rem',
+                        borderRadius: '9999px',
+                        background: '#22C55E',
+                        color: '#FFFFFF',
+                      }}
+                    >
+                      -{meta.descuentoPct}% OFF
+                    </span>
+                  </div>
 
                   <span
                     style={{
@@ -140,39 +161,70 @@ export default function OfertasPage() {
                       left: '0.65rem',
                       fontSize: '0.7rem',
                       fontWeight: 700,
-                      padding: '0.15rem 0.5rem',
+                      padding: '0.15rem 0.55rem',
                       borderRadius: '9999px',
                       background: sinStock ? '#FEE2E2' : '#DCFCE7',
                       color: sinStock ? '#991B1B' : '#166534',
                     }}
                   >
-                    {sinStock ? 'Sin stock' : `Stock: ${art.stock}`}
+                    {sinStock ? 'Agotado' : `${art.stock} disponibles`}
                   </span>
                 </div>
 
                 <div
-                  className="nexo-product-title"
-                  onClick={() => router.push(`/producto/${art.codigo}`)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '0.5rem',
+                    marginBottom: '0.2rem',
+                  }}
                 >
-                  {art.nombre}
+                  <div
+                    className="nexo-product-title"
+                    style={{ marginBottom: 0 }}
+                    onClick={() => router.push(`/producto/${art.codigo}`)}
+                  >
+                    {art.nombre}
+                  </div>
+                  <span
+                    style={{
+                      fontSize: '0.76rem',
+                      fontWeight: 700,
+                      color: '#F59E0B',
+                      flexShrink: 0,
+                    }}
+                  >
+                    ★ {meta.rating}
+                  </span>
                 </div>
-                <div className="nexo-product-sub">
-                  {meta.categoria} · {meta.subtituloCorto}
+                <div className="nexo-product-sub" style={{ marginBottom: '0.65rem' }}>
+                  {meta.subtituloCorto}
                 </div>
 
                 <div className="nexo-product-footer">
                   <div>
                     <div
                       style={{
-                        fontSize: '0.78rem',
+                        fontSize: '0.76rem',
                         color: 'var(--text-muted)',
                         textDecoration: 'line-through',
+                        lineHeight: 1.1,
                       }}
                     >
                       {formatARS(meta.precioAnterior)}
                     </div>
                     <div className="nexo-product-price" style={{ color: 'var(--primary)' }}>
                       {formatARS(art.precioUnitario)}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: '0.72rem',
+                        fontWeight: 600,
+                        color: '#16A34A',
+                      }}
+                    >
+                      Envío gratis · 6 cuotas sin interés
                     </div>
                   </div>
 

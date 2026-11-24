@@ -62,6 +62,16 @@ export class PedidosController {
   }
 
   /**
+   * GET /api/v1/pedidos/blockchain/ledger
+   * Auditoría y verificación criptográfica de la cadena de bloques de pedidos (SUP-05 - Exclusivo Admin)
+   */
+  @Get('blockchain/ledger')
+  @Roles('administrador')
+  async verificarBlockchain(@Req() req: any) {
+    return this.pedidosService.verificarCadenaBlockchain(req.user);
+  }
+
+  /**
    * GET /api/v1/pedidos/:numero
    * RF-08: Consultar un pedido propio
    */

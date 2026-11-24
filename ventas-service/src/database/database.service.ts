@@ -60,6 +60,33 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
           precio_unitario NUMERIC(12, 2) NOT NULL,
           subtotal NUMERIC(12, 2) NOT NULL
         );
+
+        CREATE TABLE IF NOT EXISTS blockchain_ledger (
+          block_index INTEGER PRIMARY KEY,
+          pedido_numero INTEGER UNIQUE REFERENCES pedidos(numero) ON DELETE SET NULL,
+          timestamp_iso VARCHAR(64) NOT NULL,
+          payload_hash VARCHAR(64) NOT NULL,
+          previous_hash VARCHAR(64) NOT NULL,
+          block_hash VARCHAR(64) UNIQUE NOT NULL,
+          nonce INTEGER NOT NULL DEFAULT 0,
+          data_json JSONB NOT NULL
+        );
+      `);
+
+      // Asegurar Bloque Génesis (#0) en el Ledger Blockchain y migrar pedidos previos que no tengan bloque
+      await client.query(`
+        INSERT INTO blockchain_ledger (block_index, pedido_numero, timestamp_iso, payload_hash, previous_hash, block_hash, nonce, data_json)
+        VALUES (
+          0,
+          NULL,
+          '2026-01-01T00:00:00.000Z',
+          '0000000000000000000000000000000000000000000000000000000000000000',
+          '0000000000000000000000000000000000000000000000000000000000000000',
+          '0000b8f4e2d91a7c6b5e3f1a8d4c2b9e7f6a5d4c3b2a1908f7e6d5c4b3a21098',
+          0,
+          '{"tipo":"GENESIS_BLOCK","sistema":"NOVA Shop SOA - UCH-FyD","regla":"SUP-05 Inmutabilidad de Pedidos"}'::jsonb
+        )
+        ON CONFLICT (block_index) DO NOTHING;
       `);
 
       // Semilla inicial de artículos cubriendo las 5 categorías de NEXO Store y preservando A-1001 con 5 unidades para el escenario TP1/TP3

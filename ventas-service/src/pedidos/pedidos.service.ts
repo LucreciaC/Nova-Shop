@@ -206,4 +206,17 @@ export class PedidosService {
     }
     return pedido;
   }
+
+  async verificarCadenaBlockchain(userPayload: {
+    usuario: string;
+    rol: string;
+  }) {
+    const esAdmin =
+      String(userPayload?.rol || '').toLowerCase() === 'administrador' ||
+      String(userPayload?.rol || '').toLowerCase() === 'admin';
+    return this.pedidoRepo.obtenerCadenaVerificada(
+      userPayload.usuario,
+      esAdmin,
+    );
+  }
 }

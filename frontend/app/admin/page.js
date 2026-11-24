@@ -19,6 +19,24 @@ export default function AdminPage() {
 
   const [usuarios, setUsuarios] = useState([]);
   const [filtroEstado, setFiltroEstado] = useState('inactivo');
+  const [ledgerModal, setLedgerModal] = useState(null);
+  const [verificandoLedger, setVerificandoLedger] = useState(false);
+
+  async function abrirExploradorBlockchain() {
+    setVerificandoLedger(true);
+    try {
+      const { res, data } = await apiRequest('/api/v1/pedidos/blockchain/ledger');
+      if (res.ok) {
+        setLedgerModal(data);
+      } else {
+        showToast(data.message || 'No se pudo verificar la cadena Blockchain', 'error');
+      }
+    } catch (err) {
+      showToast(err.message, 'error');
+    } finally {
+      setVerificandoLedger(false);
+    }
+  }
 
   // Formulario de alta/edición de artículo
   const [codigo, setCodigo] = useState('A-1001');
@@ -140,9 +158,21 @@ export default function AdminPage() {
           <div>
             <h1>Panel de Administración — NOVA Shop</h1>
             <p style={{ fontSize: '0.9rem', fontWeight: 400, color: 'var(--text-muted)' }}>
-              Activación de usuarios (MongoDB) y administración de catálogo y stock (PostgreSQL)
+              Gestión de usuarios, catálogo, inventario y auditoría criptográfica Blockchain
             </p>
           </div>
+          <button
+            className="nexo-btn-primary"
+            onClick={abrirExploradorBlockchain}
+            disabled={verificandoLedger}
+            style={{
+              background: 'linear-gradient(135deg, #4C1D95 0%, #6C5CE7 100%)',
+            }}
+          >
+            {verificandoLedger
+              ? 'Verificando cadena...'
+              : '⛓️ Verificar Integridad Blockchain'}
+          </button>
         </div>
 
         {/* 1. Gestión de Activación de Usuarios (RF-04 - Servicio de Identidad) */}
@@ -168,10 +198,10 @@ export default function AdminPage() {
           >
             <div>
               <h2 style={{ fontSize: '1.2rem', fontWeight: 800 }}>
-                1. Activación de Usuarios Registrados (RF-04 · MongoDB)
+                1. Gestión de Cuentas de Clientes
               </h2>
               <p style={{ fontSize: '0.84rem', color: 'var(--text-muted)' }}>
-                Contrato: GET /api/v1/usuarios y PATCH /api/v1/usuarios/:id/activacion
+                Activación y control de acceso de usuarios registrados
               </p>
             </div>
 
@@ -285,10 +315,10 @@ export default function AdminPage() {
           }}
         >
           <h2 style={{ fontSize: '1.2rem', fontWeight: 800, marginBottom: '0.25rem' }}>
-            2. Administración del Catálogo de Artículos (RF-12 · PostgreSQL)
+            2. Administración del Catálogo e Inventario
           </h2>
           <p style={{ fontSize: '0.84rem', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>
-            Contratos: PUT /api/v1/articulos/:codigo y PATCH /api/v1/articulos/:codigo/stock
+            Actualización de precios unitarios, especificaciones y reposición de stock en tiempo real
           </p>
 
           {/* Formulario de creación/modificación */}
@@ -448,6 +478,159 @@ export default function AdminPage() {
           </div>
         </section>
       </main>
+
+      {/* Modal Explorador de Blockchain Ledger en Panel Admin */}
+      {ledgerModal && (
+        <div
+          className="nexo-modal-center"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setLedgerModal(null);
+          }}
+        >
+          <div
+            className="nexo-modal-card"
+            style={{
+              maxWidth: 740,
+              width: '95%',
+              maxHeight: '85vh',
+              overflowY: 'auto',
+              textAlign: 'left',
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: '1rem',
+              }}
+            >
+              <div>
+                <h3 style={{ fontSize: '1.35rem', fontWeight: 800 }}>
+                  ⛓️ Auditoría Global Blockchain — NOVA Shop
+                </h3>
+                <p style={{ fontSize: '0.83rem', color: 'var(--text-muted)' }}>
+                  Inspección criptográfica de la cadena de bloques de pedidos (SHA-256 + Proof-of-Work)
+                </p>
+              </div>
+              <button
+                className="nexo-icon-btn"
+                onClick={() => setLedgerModal(null)}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div
+              style={{
+                padding: '0.9rem 1.15rem',
+                borderRadius: '0.9rem',
+                marginBottom: '1.25rem',
+                background: ledgerModal.cadenaIntegra ? '#F0FDF4' : '#FEF2F2',
+                border: ledgerModal.cadenaIntegra
+                  ? '1px solid #BBF7D0'
+                  : '1px solid #FECACA',
+                color: ledgerModal.cadenaIntegra ? '#166534' : '#991B1B',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                gap: '0.5rem',
+                fontWeight: 700,
+                fontSize: '0.88rem',
+              }}
+            >
+              <span>
+                {ledgerModal.cadenaIntegra
+                  ? '✓ CADENA GLOBAL ÍNTEGRA: Ningún pedido ni importe fue adulterado'
+                  : '⚠ ALERTA: Se detectó alteración en la cadena de bloques'}
+              </span>
+              <span>
+                {ledgerModal.totalBloques} bloques en la red · {ledgerModal.algoritmo}
+              </span>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+              {ledgerModal.bloques?.map((b) => (
+                <div
+                  key={b.blockIndex}
+                  style={{
+                    background: b.blockIndex === 0 ? '#F9FAFB' : '#FAFAFE',
+                    border: '1px solid #E5E7EB',
+                    borderRadius: '0.95rem',
+                    padding: '1rem 1.15rem',
+                  }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      marginBottom: '0.5rem',
+                      flexWrap: 'wrap',
+                      gap: '0.5rem',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                      <span
+                        style={{
+                          background: b.blockIndex === 0 ? '#374151' : '#6C5CE7',
+                          color: '#FFFFFF',
+                          fontWeight: 800,
+                          fontSize: '0.76rem',
+                          padding: '0.2rem 0.65rem',
+                          borderRadius: '9999px',
+                        }}
+                      >
+                        Bloque #{b.blockIndex}
+                      </span>
+                      <strong>
+                        {b.blockIndex === 0
+                          ? 'Bloque Génesis (Inicialización SOA)'
+                          : `Pedido #NV-${b.pedidoNumero} (${b.datos?.usuario || ''})`}
+                      </strong>
+                    </div>
+                    <span
+                      style={{
+                        fontSize: '0.76rem',
+                        fontWeight: 700,
+                        color: b.valido ? '#16A34A' : '#DC2626',
+                      }}
+                    >
+                      {b.valido ? '✓ Enlace SHA-256 Válido' : `⚠ ${b.motivoFallo}`}
+                    </span>
+                  </div>
+
+                  <div
+                    style={{
+                      fontFamily: 'monospace',
+                      fontSize: '0.73rem',
+                      color: '#4B5563',
+                      wordBreak: 'break-all',
+                      display: 'grid',
+                      gap: '0.2rem',
+                    }}
+                  >
+                    <div>
+                      <strong>Hash Actual:</strong> 0x{b.blockHash}
+                    </div>
+                    <div>
+                      <strong>Hash Anterior:</strong> 0x{b.previousHash}
+                    </div>
+                    {b.blockIndex > 0 && (
+                      <div>
+                        <strong>Payload Hash:</strong> 0x{b.payloadHash} ·{' '}
+                        <strong>Nonce:</strong> {b.nonce} ·{' '}
+                        <strong>Importe:</strong> {formatARS(b.datos?.importeTotal || 0)}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
