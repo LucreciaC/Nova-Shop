@@ -39,6 +39,14 @@ class UsuarioRepository {
       { new: true }
     ).select('-passwordHash');
   }
+
+  async updatePassword(id, passwordHash) {
+    return Usuario.findByIdAndUpdate(
+      id,
+      { passwordHash },
+      { new: true }
+    ).select('-passwordHash');
+  }
 }
 
 module.exports = new UsuarioRepository();

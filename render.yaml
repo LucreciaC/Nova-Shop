@@ -1,0 +1,79 @@
+# Blueprint de Despliegue en la Nube (Render.com) — NOVA Shop SOA (UCH-FyD)
+# Permite desplegar toda la arquitectura SOA conectando el repositorio de GitHub en Render -> Blueprints.
+
+databases:
+  - name: novashop-postgres
+    databaseName: novashop_ventas
+    user: novashop
+    plan: free
+
+services:
+  # 1. Servicio de Identidad (Node.js + MongoDB Atlas)
+  - type: web
+    name: novashop-identity-service
+    runtime: node
+    rootDir: identity-service
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: PORT
+        value: 3001
+      - key: MONGO_URI
+        sync: false # Configurar URI de MongoDB Atlas (ej. mongodb+srv://...)
+      - key: ADMIN_USERNAME
+        value: admin
+      - key: ADMIN_EMAIL
+        value: admin@uch.edu.ar
+      - key: ADMIN_PASSWORD
+        sync: false
+
+  # 2. Servidor de Ventas (NestJS + PostgreSQL)
+  - type: web
+    name: novashop-ventas-service
+    runtime: node
+    rootDir: ventas-service
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: PORT
+        value: 3002
+      - key: INSTANCE_NAME
+        value: ventas-cloud-1
+      - key: DATABASE_URL
+        fromDatabase:
+          name: novashop-postgres
+          property: connectionString
+      - key: IDENTITY_JWKS_URL
+        sync: false # URL pública o interna de novashop-identity-service + /api/v1/auth/jwks
+
+  # 3. API Gateway SOA + NOVA AI Assistant
+  - type: web
+    name: novashop-api-gateway
+    runtime: node
+    rootDir: api-gateway
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: PORT
+        value: 8080
+      - key: IDENTITY_SERVICE_URL
+        sync: false # URL de novashop-identity-service
+      - key: VENTAS_SERVICE_URLS
+        sync: false # URL de novashop-ventas-service
+      - key: GEMINI_API_KEY
+        sync: false # Opcional: Clave de Google Gemini API (si se deja vacía usa NOVA Semantic RAG Engine)
+
+  # 4. Frontend Web (Next.js 14)
+  - type: web
+    name: novashop-frontend
+    runtime: node
+    rootDir: frontend
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NEXT_PUBLIC_API_GATEWAY_URL
+        sync: false # URL pública de novashop-api-gateway

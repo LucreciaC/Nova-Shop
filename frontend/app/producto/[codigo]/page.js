@@ -18,6 +18,7 @@ export default function ProductoDetallePage() {
 
   const {
     articulos,
+    usuario,
     apiRequest,
     agregarAlCarrito,
     favoritos,
@@ -30,6 +31,102 @@ export default function ProductoDetallePage() {
   const [cantidad, setCantidad] = useState(1);
   const [thumbVariant, setThumbVariant] = useState(0);
   const [loadingDetalle, setLoadingDetalle] = useState(true);
+  const [analisisIA, setAnalisisIA] = useState(null);
+  const [analizandoIA, setAnalizandoIA] = useState(false);
+
+  // Estado de comentarios y reseñas de clientes
+  const [comentarios, setComentarios] = useState([]);
+  const [nuevoTextoComentario, setNuevoTextoComentario] = useState('');
+  const [nuevaCalificacion, setNuevaCalificacion] = useState(5);
+  const [enviandoComentario, setEnviandoComentario] = useState(false);
+  const [resumenOpinionesIA, setResumenOpinionesIA] = useState(null);
+  const [resumiendoOpinionesIA, setResumiendoOpinionesIA] = useState(false);
+
+  async function resumirOpinionesConNovaAI() {
+    if (!articulo || resumiendoOpinionesIA) return;
+    setResumiendoOpinionesIA(true);
+    try {
+      const { res, data } = await apiRequest('/api/v1/ia/resumir-opiniones', {
+        method: 'POST',
+        body: JSON.stringify({ codigo: articulo.codigo }),
+      });
+      if (res.ok) {
+        setResumenOpinionesIA(data);
+      } else {
+        showToast(data.message || 'No se pudieron resumir las opiniones', 'error');
+      }
+    } catch (err) {
+      showToast(err.message, 'error');
+    } finally {
+      setResumiendoOpinionesIA(false);
+    }
+  }
+
+  async function cargarComentariosProducto(cod) {
+    try {
+      const { res, data } = await apiRequest(`/api/v1/articulos/${cod}/comentarios`);
+      if (res.ok && Array.isArray(data)) {
+        setComentarios(data);
+      }
+    } catch (_) {}
+  }
+
+  async function publicarComentario(e) {
+    e.preventDefault();
+    if (!usuario) {
+      showToast('Iniciá sesión para dejar tu comentario.', 'warning');
+      router.push('/login');
+      return;
+    }
+    if (!nuevoTextoComentario.trim() || enviandoComentario) return;
+
+    setEnviandoComentario(true);
+    try {
+      const { res, data } = await apiRequest(
+        `/api/v1/articulos/${articulo.codigo}/comentarios`,
+        {
+          method: 'POST',
+          body: JSON.stringify({
+            calificacion: nuevaCalificacion,
+            texto: nuevoTextoComentario.trim(),
+          }),
+        },
+      );
+      if (res.ok) {
+        setNuevoTextoComentario('');
+        setNuevaCalificacion(5);
+        setResumenOpinionesIA(null); // Resetear resumen para que el usuario pueda re-analizar incluyendo su comentario nuevo
+        showToast('¡Gracias! Tu opinión fue publicada.', 'success');
+        await cargarComentariosProducto(articulo.codigo);
+      } else {
+        showToast(data.message || 'No se pudo publicar el comentario', 'error');
+      }
+    } catch (err) {
+      showToast(err.message, 'error');
+    } finally {
+      setEnviandoComentario(false);
+    }
+  }
+
+  async function analizarConNovaAI() {
+    if (!articulo || analizandoIA) return;
+    setAnalizandoIA(true);
+    try {
+      const { res, data } = await apiRequest('/api/v1/ia/analizar-producto', {
+        method: 'POST',
+        body: JSON.stringify({ codigo: articulo.codigo }),
+      });
+      if (res.ok) {
+        setAnalisisIA(data);
+      } else {
+        showToast(data.message || 'No se pudo obtener el análisis de NOVA AI', 'error');
+      }
+    } catch (err) {
+      showToast(err.message, 'error');
+    } finally {
+      setAnalizandoIA(false);
+    }
+  }
 
   useEffect(() => {
     async function fetchArticulo() {
@@ -53,7 +150,10 @@ export default function ProductoDetallePage() {
         setLoadingDetalle(false);
       }
     }
-    if (codigo) fetchArticulo();
+    if (codigo) {
+      fetchArticulo();
+      cargarComentariosProducto(codigo);
+    }
   }, [codigo, articulos]);
 
   if (loadingDetalle && !articulo) {
@@ -469,8 +569,532 @@ export default function ProductoDetallePage() {
                 {articulo.descripcion}
               </p>
             )}
+
+            {/* Botón y Tarjeta de Análisis Inteligente NOVA AI */}
+            <div style={{ marginTop: '1.5rem' }}>
+              {!analisisIA ? (
+                <button
+                  type="button"
+                  onClick={analizarConNovaAI}
+                  disabled={analizandoIA}
+                  style={{
+                    width: '100%',
+                    padding: '0.8rem 1.2rem',
+                    borderRadius: '0.9rem',
+                    border: '1px solid #DDD6FE',
+                    background: 'linear-gradient(135deg, #F5F3FF 0%, #EDE9FE 100%)',
+                    color: '#5B21B6',
+                    fontWeight: 700,
+                    fontSize: '0.9rem',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '0.5rem',
+                    boxShadow: '0 4px 12px rgba(108, 92, 231, 0.12)',
+                  }}
+                >
+                  <span>✨</span>
+                  <span>
+                    {analizandoIA
+                      ? 'NOVA AI está analizando especificaciones y stock...'
+                      : 'Analizar este producto con NOVA AI'}
+                  </span>
+                </button>
+              ) : (
+                <div
+                  style={{
+                    background: 'linear-gradient(180deg, #F5F3FF 0%, #FFFFFF 100%)',
+                    border: '1px solid #C4B5FD',
+                    borderRadius: '1.15rem',
+                    padding: '1.25rem',
+                    boxShadow: '0 12px 24px -10px rgba(108, 92, 231, 0.2)',
+                  }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      marginBottom: '0.75rem',
+                      flexWrap: 'wrap',
+                      gap: '0.5rem',
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.45rem',
+                        fontWeight: 800,
+                        color: '#5B21B6',
+                        fontSize: '0.95rem',
+                      }}
+                    >
+                      <span>✨</span>
+                      <span>Análisis Inteligente NOVA AI</span>
+                    </div>
+                    <span
+                      style={{
+                        fontSize: '0.68rem',
+                        fontWeight: 700,
+                        background: '#EDE9FE',
+                        color: '#6C5CE7',
+                        padding: '0.2rem 0.55rem',
+                        borderRadius: '9999px',
+                      }}
+                    >
+                      ⚡ {analisisIA.motor || 'Google Gemini API'}
+                    </span>
+                  </div>
+
+                  <div style={{ fontSize: '0.84rem', color: '#374151', marginBottom: '0.75rem' }}>
+                    <strong>¿Para quién es ideal?:</strong> {analisisIA.perfilIdeal}
+                  </div>
+
+                  <div style={{ fontSize: '0.84rem', color: '#374151', marginBottom: '0.75rem' }}>
+                    <strong>Relación Precio-Calidad:</strong>{' '}
+                    <span style={{ color: '#16A34A', fontWeight: 700 }}>
+                      {analisisIA.veredictoPrecioCalidad}
+                    </span>
+                  </div>
+
+                  <ul
+                    style={{
+                      margin: '0 0 1rem 1.1rem',
+                      fontSize: '0.82rem',
+                      color: '#4B5563',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '0.3rem',
+                    }}
+                  >
+                    {analisisIA.puntosFuertes?.map((pt, i) => (
+                      <li key={i}>{pt}</li>
+                    ))}
+                  </ul>
+
+                  {analisisIA.productoComplementario && (
+                    <div
+                      style={{
+                        background: '#FFFFFF',
+                        border: '1px solid #E5E7EB',
+                        borderRadius: '0.85rem',
+                        padding: '0.75rem',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: '0.75rem',
+                        flexWrap: 'wrap',
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.65rem',
+                          cursor: 'pointer',
+                        }}
+                        onClick={() =>
+                          router.push(`/producto/${analisisIA.productoComplementario.codigo}`)
+                        }
+                      >
+                        <div style={{ width: 46, height: 46, borderRadius: '0.5rem', overflow: 'hidden' }}>
+                          <ProductIllustration
+                            articulo={analisisIA.productoComplementario}
+                            size={46}
+                          />
+                        </div>
+                        <div>
+                          <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#6C5CE7' }}>
+                            💡 COMBINALO CON:
+                          </div>
+                          <div style={{ fontSize: '0.85rem', fontWeight: 700 }}>
+                            {analisisIA.productoComplementario.nombre}
+                          </div>
+                          <div style={{ fontSize: '0.78rem', color: '#16A34A', fontWeight: 700 }}>
+                            {formatARS(analisisIA.productoComplementario.precioUnitario)} ·{' '}
+                            {analisisIA.productoComplementario.stock} disponibles
+                          </div>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          agregarAlCarrito(articulo, 1, false);
+                          agregarAlCarrito(analisisIA.productoComplementario, 1, true);
+                          showToast('¡Ambos productos agregados al carrito!', 'success');
+                        }}
+                        style={{
+                          background: '#6C5CE7',
+                          color: '#FFFFFF',
+                          border: 'none',
+                          borderRadius: '0.65rem',
+                          padding: '0.5rem 0.85rem',
+                          fontSize: '0.78rem',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        + Llevar ambos ({formatARS(analisisIA.precioComboSugerido)})
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
+
+        {/* Sección de Opiniones y Comentarios de Clientes */}
+        <section
+          style={{
+            marginTop: '2.5rem',
+            background: 'var(--surface)',
+            borderRadius: '1.5rem',
+            border: '1px solid #ECEEF5',
+            padding: '2.25rem',
+            boxShadow: '0 20px 40px -15px rgba(31, 41, 55, 0.05)',
+          }}
+        >
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              gap: '1rem',
+              marginBottom: '1.75rem',
+            }}
+          >
+            <div>
+              <h2 style={{ fontSize: '1.45rem', fontWeight: 800 }}>
+                Opiniones del producto ({comentarios.length})
+              </h2>
+              <p style={{ fontSize: '0.88rem', color: 'var(--text-muted)' }}>
+                Experiencias verificadas de clientes que compraron en NOVA Shop
+              </p>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap' }}>
+              {comentarios.length > 0 && !resumenOpinionesIA && (
+                <button
+                  type="button"
+                  onClick={resumirOpinionesConNovaAI}
+                  disabled={resumiendoOpinionesIA}
+                  style={{
+                    padding: '0.55rem 1.05rem',
+                    borderRadius: '9999px',
+                    border: '1px solid #C4B5FD',
+                    background: 'linear-gradient(135deg, #F5F3FF 0%, #EDE9FE 100%)',
+                    color: '#5B21B6',
+                    fontWeight: 700,
+                    fontSize: '0.84rem',
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '0.45rem',
+                    boxShadow: '0 4px 12px rgba(108, 92, 231, 0.12)',
+                  }}
+                >
+                  <span>✨</span>
+                  <span>
+                    {resumiendoOpinionesIA
+                      ? 'NOVA AI está leyendo las opiniones...'
+                      : 'Resumir opiniones con NOVA AI'}
+                  </span>
+                </button>
+              )}
+
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '0.5rem',
+                  background: '#FFFBEB',
+                  border: '1px solid #FDE68A',
+                  padding: '0.45rem 0.95rem',
+                  borderRadius: '9999px',
+                  fontWeight: 800,
+                  color: '#B45309',
+                }}
+              >
+                <span style={{ color: '#F59E0B', fontSize: '1.1rem' }}>★★★★★</span>
+                <span>{meta.rating} / 5.0</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Tarjeta de Resumen de Opiniones Generado por NOVA AI (estilo Mercado Libre / Amazon) */}
+          {resumenOpinionesIA && (
+            <div
+              style={{
+                background: 'linear-gradient(135deg, #F5F3FF 0%, #FAFAFE 100%)',
+                border: '1px solid #C4B5FD',
+                borderRadius: '1.15rem',
+                padding: '1.25rem 1.4rem',
+                marginBottom: '1.75rem',
+                boxShadow: '0 10px 24px -12px rgba(108, 92, 231, 0.22)',
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  flexWrap: 'wrap',
+                  gap: '0.5rem',
+                  marginBottom: '0.65rem',
+                }}
+              >
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    fontWeight: 800,
+                    color: '#5B21B6',
+                    fontSize: '0.96rem',
+                  }}
+                >
+                  <span>✨</span>
+                  <span>
+                    Resumen de opiniones por IA ({resumenOpinionesIA.totalOpinionesAnalizadas}{' '}
+                    {resumenOpinionesIA.totalOpinionesAnalizadas === 1 ? 'comentario' : 'comentarios'} en PostgreSQL)
+                  </span>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+                  <span
+                    style={{
+                      fontSize: '0.73rem',
+                      fontWeight: 800,
+                      background: '#DCFCE7',
+                      color: '#166534',
+                      padding: '0.2rem 0.65rem',
+                      borderRadius: '9999px',
+                    }}
+                  >
+                    ✓ {resumenOpinionesIA.sentimientoGeneral}
+                  </span>
+                  <span
+                    style={{
+                      fontSize: '0.68rem',
+                      fontWeight: 700,
+                      background: '#EDE9FE',
+                      color: '#6C5CE7',
+                      padding: '0.2rem 0.6rem',
+                      borderRadius: '9999px',
+                    }}
+                  >
+                    ⚡ {resumenOpinionesIA.motor}
+                  </span>
+                </div>
+              </div>
+
+              <p
+                style={{
+                  fontSize: '0.88rem',
+                  color: '#1F2937',
+                  lineHeight: 1.55,
+                  marginBottom: '0.75rem',
+                }}
+              >
+                {resumenOpinionesIA.resumenEjecutivo}
+              </p>
+
+              {resumenOpinionesIA.aspectosDestacados?.length > 0 && (
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.45rem',
+                    flexWrap: 'wrap',
+                    marginBottom: '0.5rem',
+                  }}
+                >
+                  <span style={{ fontSize: '0.76rem', fontWeight: 700, color: '#6B7280' }}>
+                    Lo más valorado:
+                  </span>
+                  {resumenOpinionesIA.aspectosDestacados.map((asp, i) => (
+                    <span
+                      key={i}
+                      style={{
+                        background: '#FFFFFF',
+                        border: '1px solid #DDD6FE',
+                        color: '#5B21B6',
+                        fontSize: '0.74rem',
+                        fontWeight: 700,
+                        padding: '0.18rem 0.65rem',
+                        borderRadius: '9999px',
+                      }}
+                    >
+                      ✦ {asp}
+                    </span>
+                  ))}
+                </div>
+              )}
+
+              <div style={{ fontSize: '0.8rem', fontWeight: 600, color: '#4B5563' }}>
+                <strong>Veredicto de la comunidad:</strong> {resumenOpinionesIA.conclusionComunidad}
+              </div>
+            </div>
+          )}
+
+          {/* Formulario para agregar un comentario */}
+          <form
+            onSubmit={publicarComentario}
+            style={{
+              background: '#F9FAFB',
+              border: '1px solid var(--border)',
+              borderRadius: '1.1rem',
+              padding: '1.25rem',
+              marginBottom: '1.75rem',
+            }}
+          >
+            <div
+              style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                gap: '0.75rem',
+                marginBottom: '0.85rem',
+              }}
+            >
+              <span style={{ fontWeight: 700, fontSize: '0.92rem' }}>
+                {usuario
+                  ? `Dejá tu opinión como ${usuario.nombreCliente || usuario.username}`
+                  : '¿Ya probaste este producto? Dejá tu opinión'}
+              </span>
+
+              {/* Selector de estrellas (1 a 5) */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginRight: '0.25rem' }}>
+                  Calificación:
+                </span>
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    type="button"
+                    onClick={() => setNuevaCalificacion(star)}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      fontSize: '1.35rem',
+                      cursor: 'pointer',
+                      color: star <= nuevaCalificacion ? '#F59E0B' : '#D1D5DB',
+                      lineHeight: 1,
+                    }}
+                    title={`${star} estrellas`}
+                  >
+                    ★
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+              <input
+                type="text"
+                className="nexo-input"
+                style={{ flex: 1, minWidth: '240px', paddingLeft: '1rem', background: '#FFFFFF' }}
+                placeholder="Contanos qué te pareció la calidad, el rendimiento o el envío..."
+                value={nuevoTextoComentario}
+                onChange={(e) => setNuevoTextoComentario(e.target.value)}
+                required
+              />
+              <button
+                type="submit"
+                className="nexo-btn-primary"
+                disabled={enviandoComentario || !nuevoTextoComentario.trim()}
+              >
+                {enviandoComentario ? 'Publicando...' : 'Publicar comentario'}
+              </button>
+            </div>
+          </form>
+
+          {/* Listado de comentarios */}
+          {comentarios.length === 0 ? (
+            <p style={{ color: 'var(--text-muted)', textAlign: 'center', padding: '1.5rem 0' }}>
+              Sé el primero en dejar una opinión sobre este producto.
+            </p>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {comentarios.map((c) => (
+                <div
+                  key={c.id}
+                  style={{
+                    padding: '1.15rem 1.25rem',
+                    borderRadius: '1rem',
+                    border: '1px solid #ECEEF5',
+                    background: '#FAFAFE',
+                  }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      flexWrap: 'wrap',
+                      gap: '0.5rem',
+                      marginBottom: '0.45rem',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                      <div
+                        style={{
+                          width: 34,
+                          height: 34,
+                          borderRadius: '50%',
+                          background: '#EDE9FE',
+                          color: 'var(--primary)',
+                          fontWeight: 800,
+                          fontSize: '0.85rem',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        {(c.nombreCliente || c.usuario || 'U').charAt(0).toUpperCase()}
+                      </div>
+                      <div>
+                        <strong style={{ fontSize: '0.92rem' }}>{c.nombreCliente}</strong>
+                        <span
+                          style={{
+                            marginLeft: '0.5rem',
+                            fontSize: '0.73rem',
+                            fontWeight: 700,
+                            color: '#166534',
+                            background: '#DCFCE7',
+                            padding: '0.12rem 0.5rem',
+                            borderRadius: '9999px',
+                          }}
+                        >
+                          ✓ Compra verificada
+                        </span>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
+                      <span style={{ color: '#F59E0B', fontSize: '0.95rem', letterSpacing: '1px' }}>
+                        {'★'.repeat(c.calificacion)}
+                        {'☆'.repeat(Math.max(0, 5 - c.calificacion))}
+                      </span>
+                      <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                        {new Date(c.fecha).toLocaleDateString('es-AR')}
+                      </span>
+                    </div>
+                  </div>
+
+                  <p style={{ fontSize: '0.9rem', color: '#374151', paddingLeft: '2.7rem' }}>
+                    {c.texto}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
       </main>
     </div>
   );

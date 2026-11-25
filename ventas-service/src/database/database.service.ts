@@ -61,32 +61,15 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
           subtotal NUMERIC(12, 2) NOT NULL
         );
 
-        CREATE TABLE IF NOT EXISTS blockchain_ledger (
-          block_index INTEGER PRIMARY KEY,
-          pedido_numero INTEGER UNIQUE REFERENCES pedidos(numero) ON DELETE SET NULL,
-          timestamp_iso VARCHAR(64) NOT NULL,
-          payload_hash VARCHAR(64) NOT NULL,
-          previous_hash VARCHAR(64) NOT NULL,
-          block_hash VARCHAR(64) UNIQUE NOT NULL,
-          nonce INTEGER NOT NULL DEFAULT 0,
-          data_json JSONB NOT NULL
+        CREATE TABLE IF NOT EXISTS comentarios_articulo (
+          id SERIAL PRIMARY KEY,
+          codigo_articulo VARCHAR(50) NOT NULL REFERENCES articulos(codigo) ON DELETE CASCADE,
+          usuario VARCHAR(100) NOT NULL,
+          nombre_cliente VARCHAR(255) NOT NULL,
+          calificacion INTEGER NOT NULL CHECK (calificacion >= 1 AND calificacion <= 5),
+          texto TEXT NOT NULL,
+          fecha TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
         );
-      `);
-
-      // Asegurar Bloque Génesis (#0) en el Ledger Blockchain y migrar pedidos previos que no tengan bloque
-      await client.query(`
-        INSERT INTO blockchain_ledger (block_index, pedido_numero, timestamp_iso, payload_hash, previous_hash, block_hash, nonce, data_json)
-        VALUES (
-          0,
-          NULL,
-          '2026-01-01T00:00:00.000Z',
-          '0000000000000000000000000000000000000000000000000000000000000000',
-          '0000000000000000000000000000000000000000000000000000000000000000',
-          '0000b8f4e2d91a7c6b5e3f1a8d4c2b9e7f6a5d4c3b2a1908f7e6d5c4b3a21098',
-          0,
-          '{"tipo":"GENESIS_BLOCK","sistema":"NOVA Shop SOA - UCH-FyD","regla":"SUP-05 Inmutabilidad de Pedidos"}'::jsonb
-        )
-        ON CONFLICT (block_index) DO NOTHING;
       `);
 
       // Semilla inicial de artículos cubriendo las 5 categorías de NEXO Store y preservando A-1001 con 5 unidades para el escenario TP1/TP3
@@ -107,6 +90,25 @@ export class DatabaseService implements OnModuleInit, OnModuleDestroy {
           descripcion = EXCLUDED.descripcion,
           precio_unitario = EXCLUDED.precio_unitario;
       `);
+
+      // Semilla inicial de comentarios reales si la tabla está vacía
+      const countRes = await client.query('SELECT COUNT(*) FROM comentarios_articulo');
+      if (Number(countRes.rows[0].count) === 0) {
+        await client.query(`
+          INSERT INTO comentarios_articulo (codigo_articulo, usuario, nombre_cliente, calificacion, texto)
+          VALUES
+            ('A-1001', 'camila_olivera', 'Camila Olivera', 5, 'La cancelación de ruido es impresionante, los uso todos los días para estudiar y la batería dura muchísimo.'),
+            ('A-1001', 'juan_narvaez', 'Juan Narvaez', 5, 'Excelente calidad de sonido y muy cómodos incluso después de varias horas.'),
+            ('A-1002', 'rocio_santilli', 'Rocío Santilli', 5, 'Súper liviana y rápida para programar y levantar contenedores. La pantalla IPS se ve impecable.'),
+            ('A-1003', 'juan_narvaez', 'Juan Narvaez', 5, 'Los switches Red son re silenciosos y la construcción en aluminio se siente muy sólida.'),
+            ('A-1004', 'lucre_concatti', 'Lucrecia Concatti', 5, 'El GPS es súper preciso para salir a correr y la pantalla se ve perfecto bajo el sol.'),
+            ('A-1005', 'camila_olivera', 'Camila Olivera', 4, 'Muy liviano y preciso, la batería inalámbrica dura toda la semana sin cargarlo.'),
+            ('A-1006', 'rocio_santilli', 'Rocío Santilli', 5, 'El sonido 360 llena todo el living y reconoce los comandos de voz al instante.'),
+            ('A-1007', 'lucre_concatti', 'Lucrecia Concatti', 5, 'Los 144Hz y la resolución QHD hacen una diferencia enorme tanto para diseño como para gaming.'),
+            ('A-1008', 'camila_olivera', 'Camila Olivera', 5, 'Fácil de configurar con el Wi-Fi de casa, los colores cálidos y RGB quedan hermosos.'),
+            ('A-1009', 'juan_narvaez', 'Juan Narvaez', 5, 'Carga mi notebook y el celular al mismo tiempo sin calentarse nada. Muy recomendable.');
+        `);
+      }
 
       console.log('[ventas-service] Esquema PostgreSQL y semilla de catálogo inicializados.');
     } finally {

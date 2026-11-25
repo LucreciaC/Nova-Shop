@@ -14,11 +14,11 @@ export default function Footer() {
             </Link>
             <p style={{ fontSize: '0.88rem', color: '#9CA3AF', maxWidth: 320, lineHeight: 1.6 }}>
               Tu tienda oficial de tecnología de alta gama. Productos originales con garantía oficial,
-              asistencia inteligente por IA y auditoría transaccional inmutable.
+              stock en tiempo real y asistencia inteligente por IA.
             </p>
             <div style={{ display: 'flex', gap: '0.6rem', marginTop: '1.15rem', flexWrap: 'wrap' }}>
               <span className="nexo-footer-pill">Pagos 100% Protegidos</span>
-              <span className="nexo-footer-pill">Blockchain Verified</span>
+              <span className="nexo-footer-pill">Asistente NOVA AI</span>
             </div>
           </div>
 
@@ -39,7 +39,6 @@ export default function Footer() {
             <ul className="nexo-footer-links">
               <li><Link href="/login">Iniciar sesión / Registrarse</Link></li>
               <li><Link href="/pedidos">Mis compras y comprobantes</Link></li>
-              <li><Link href="/pedidos">Verificador de cadena Blockchain</Link></li>
             </ul>
           </div>
 

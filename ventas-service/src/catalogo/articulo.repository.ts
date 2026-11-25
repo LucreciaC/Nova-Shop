@@ -11,6 +11,16 @@ export interface ArticuloEntity {
   updatedAt?: Date;
 }
 
+export interface ComentarioArticuloEntity {
+  id: number;
+  codigoArticulo: string;
+  usuario: string;
+  nombreCliente: string;
+  calificacion: number;
+  texto: string;
+  fecha: string;
+}
+
 /**
  * Patrón Repository para el acceso a datos de Artículos en PostgreSQL (ADR-06)
  */
@@ -130,5 +140,57 @@ export class ArticuloRepository {
       return null;
     }
     return this.mapRow(result.rows[0]);
+  }
+
+  async findComentariosByCodigo(
+    codigo: string,
+  ): Promise<ComentarioArticuloEntity[]> {
+    const result = await this.db
+      .getPool()
+      .query(
+        'SELECT * FROM comentarios_articulo WHERE codigo_articulo = $1 ORDER BY fecha DESC, id DESC',
+        [codigo.trim().toUpperCase()],
+      );
+    return result.rows.map((r) => ({
+      id: Number(r.id),
+      codigoArticulo: r.codigo_articulo,
+      usuario: r.usuario,
+      nombreCliente: r.nombre_cliente,
+      calificacion: Number(r.calificacion),
+      texto: r.texto,
+      fecha: new Date(r.fecha).toISOString(),
+    }));
+  }
+
+  async crearComentario(datos: {
+    codigoArticulo: string;
+    usuario: string;
+    nombreCliente: string;
+    calificacion: number;
+    texto: string;
+  }): Promise<ComentarioArticuloEntity> {
+    const result = await this.db.getPool().query(
+      `INSERT INTO comentarios_articulo
+       (codigo_articulo, usuario, nombre_cliente, calificacion, texto)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING *`,
+      [
+        datos.codigoArticulo.trim().toUpperCase(),
+        datos.usuario,
+        datos.nombreCliente,
+        datos.calificacion,
+        datos.texto.trim(),
+      ],
+    );
+    const r = result.rows[0];
+    return {
+      id: Number(r.id),
+      codigoArticulo: r.codigo_articulo,
+      usuario: r.usuario,
+      nombreCliente: r.nombre_cliente,
+      calificacion: Number(r.calificacion),
+      texto: r.texto,
+      fecha: new Date(r.fecha).toISOString(),
+    };
   }
 }

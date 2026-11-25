@@ -49,6 +49,14 @@ function isAdminRole(rol) {
   return normalized === 'administrador' || normalized === 'admin';
 }
 
+function esPasswordSegura(pwd) {
+  if (!pwd || typeof pwd !== 'string') return false;
+  const tieneMayuscula = /[A-Z]/.test(pwd);
+  const tieneMinuscula = /[a-z]/.test(pwd);
+  const tieneNumero = /[0-9]/.test(pwd);
+  return pwd.length >= 6 && tieneMayuscula && tieneMinuscula && tieneNumero;
+}
+
 function requireAuth(rolRequerido) {
   return (req, res, next) => {
     const authHeader = req.headers.authorization;
@@ -113,6 +121,15 @@ app.post('/api/v1/auth/registro', async (req, res) => {
       return res.status(400).json({
         error: 'Bad Request',
         message: 'Debe proporcionar nombre de usuario (o correo) y contraseña.',
+        traceId: req.traceId,
+      });
+    }
+
+    if (!esPasswordSegura(password)) {
+      return res.status(400).json({
+        error: 'Bad Request',
+        message:
+          'La contraseña debe tener al menos 6 caracteres e incluir una letra mayúscula, una minúscula y un número.',
         traceId: req.traceId,
       });
     }
@@ -248,6 +265,58 @@ app.get('/api/v1/auth/jwks', (req, res) => {
 });
 
 /**
+ * 3b. POST /api/v1/auth/recuperar-password
+ * Permite restablecer la contraseña de un usuario verificando su usuario y correo electrónico en MongoDB
+ */
+app.post('/api/v1/auth/recuperar-password', async (req, res) => {
+  try {
+    const { username, email, nuevaPassword } = req.body;
+    const identificador = username || email;
+
+    if (!identificador || !nuevaPassword || !esPasswordSegura(nuevaPassword)) {
+      return res.status(400).json({
+        error: 'Bad Request',
+        message:
+          'La nueva contraseña debe tener al menos 6 caracteres e incluir una letra mayúscula, una minúscula y un número.',
+        traceId: req.traceId,
+      });
+    }
+
+    const usuario = await usuarioRepository.findByUsernameOrEmail(identificador);
+    if (!usuario) {
+      return res.status(404).json({
+        error: 'Not Found',
+        message: 'No encontramos ninguna cuenta registrada con ese usuario o correo electrónico.',
+        traceId: req.traceId,
+      });
+    }
+
+    // Si el usuario tiene email guardado y envió email para verificar, comprobar que coincida
+    if (email && usuario.email && usuario.email.toLowerCase() !== String(email).trim().toLowerCase()) {
+      return res.status(400).json({
+        error: 'Bad Request',
+        message: 'El correo electrónico ingresado no coincide con el registrado en la cuenta.',
+        traceId: req.traceId,
+      });
+    }
+
+    const nuevoHash = await bcrypt.hash(nuevaPassword, 10);
+    await usuarioRepository.updatePassword(usuario._id, nuevoHash);
+
+    return res.status(200).json({
+      username: usuario.username,
+      mensaje: `¡Contraseña actualizada con éxito para '${usuario.username}'! Ya podés iniciar sesión con tu nueva clave.`,
+    });
+  } catch (err) {
+    return res.status(500).json({
+      error: 'Internal Server Error',
+      message: err.message,
+      traceId: req.traceId,
+    });
+  }
+});
+
+/**
  * 4. GET /api/v1/usuarios (y alias GET /usuarios)
  * RF-04: Consultar usuarios (ej. ?estado=inactivo) - Rol requerido: Administrador / ADMIN
  * No devuelve contraseñas, hashes ni información sensible.
@@ -362,8 +431,8 @@ async function seedUsuariosDesdeEntorno() {
 
   if (adminUser && adminPass) {
     const adminExists = await usuarioRepository.findByUsername(adminUser);
+    const hash = await bcrypt.hash(adminPass, 10);
     if (!adminExists) {
-      const hash = await bcrypt.hash(adminPass, 10);
       await usuarioRepository.create({
         username: adminUser.trim().toLowerCase(),
         email: adminEmail.trim().toLowerCase(),
@@ -373,6 +442,11 @@ async function seedUsuariosDesdeEntorno() {
         estado: 'activo',
       });
       console.log(`[identity-service] Administrador inicial '${adminUser}' configurado desde variables de entorno.`);
+    } else {
+      adminExists.passwordHash = hash;
+      adminExists.rol = 'administrador';
+      adminExists.estado = 'activo';
+      await adminExists.save();
     }
   }
 }

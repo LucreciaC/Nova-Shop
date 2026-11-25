@@ -29,7 +29,7 @@ services:
       - ADMIN_USERNAME=${ADMIN_USERNAME:-admin}
       - ADMIN_EMAIL=${ADMIN_EMAIL:-admin@uch.edu.ar}
       - ADMIN_NOMBRE=${ADMIN_NOMBRE:-Administrador UCH-FyD}
-      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-TuClaveAdminSegura}
     ports:
       - '3001:3001'
     depends_on:

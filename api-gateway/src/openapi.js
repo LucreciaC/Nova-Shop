@@ -99,6 +99,34 @@ const openapiSpecification = {
         },
       },
     },
+    '/auth/recuperar-password': {
+      post: {
+        tags: ['Identidad'],
+        summary: 'Restablecer contraseña de usuario validando complejidad segura',
+        parameters: [{ $ref: '#/components/parameters/TraceIdHeader' }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['username', 'nuevaPassword'],
+                properties: {
+                  username: { type: 'string', example: 'lucrecia' },
+                  email: { type: 'string', example: 'lucrecia@uch.edu.ar' },
+                  nuevaPassword: { type: 'string', example: 'NuevaClave123' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: { description: 'Contraseña restablecida y encriptada con bcrypt en MongoDB.' },
+          400: { description: 'La contraseña no cumple los requisitos de seguridad (mayúscula, minúscula, número y >= 6 caracteres).' },
+          404: { description: 'Usuario o correo no encontrado.' },
+        },
+      },
+    },
     '/auth/jwks': {
       get: {
         tags: ['Identidad'],
@@ -244,6 +272,46 @@ const openapiSpecification = {
         },
       },
     },
+    '/articulos/{codigo}/comentarios': {
+      get: {
+        tags: ['Catálogo'],
+        summary: 'Listar reseñas y opiniones de clientes sobre un artículo',
+        parameters: [
+          { name: 'codigo', in: 'path', required: true, schema: { type: 'string', example: 'A-1001' } },
+        ],
+        responses: {
+          200: { description: 'Listado de comentarios y calificaciones del producto desde PostgreSQL.' },
+        },
+      },
+      post: {
+        tags: ['Catálogo'],
+        summary: 'Publicar un comentario y calificación (1 a 5 estrellas) sobre un artículo',
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: 'codigo', in: 'path', required: true, schema: { type: 'string', example: 'A-1001' } },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['calificacion', 'texto'],
+                properties: {
+                  calificacion: { type: 'integer', minimum: 1, maximum: 5, example: 5 },
+                  texto: { type: 'string', example: 'Excelente calidad y envío rapidísimo.' },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          201: { description: 'Comentario registrado en PostgreSQL.' },
+          400: { description: 'Calificación o texto inválido.' },
+          401: { description: 'No autenticado.' },
+        },
+      },
+    },
     '/pedidos': {
       post: {
         tags: ['Pedidos'],
@@ -306,23 +374,9 @@ const openapiSpecification = {
           { name: 'numero', in: 'path', required: true, schema: { type: 'integer', example: 15432 } },
         ],
         responses: {
-          200: { description: 'Detalle del pedido y sus líneas (incluye sello criptográfico Blockchain).' },
+          200: { description: 'Detalle del pedido y sus líneas.' },
           403: { description: 'El pedido pertenece a otro usuario.' },
           404: { description: 'Pedido no encontrado.' },
-        },
-      },
-    },
-    '/pedidos/blockchain/ledger': {
-      get: {
-        tags: ['Blockchain Ledger (SUP-05)'],
-        summary: 'Verificar la integridad criptográfica de la cadena de bloques de pedidos (SHA-256 + PoW)',
-        security: [{ bearerAuth: [] }],
-        responses: {
-          200: {
-            description:
-              'Devuelve la cadena completa desde el Bloque Génesis (#0) validando el encadenamiento previous_hash -> block_hash.',
-          },
-          401: { description: 'No autenticado.' },
         },
       },
     },
@@ -354,6 +408,68 @@ const openapiSpecification = {
               'Respuesta generada por IA junto con la lista de artículos recomendados verificados con stock en PostgreSQL.',
           },
           503: { description: 'Servicio de catálogo temporalmente no disponible (Circuit Breaker).' },
+        },
+      },
+    },
+    '/ia/analizar-producto': {
+      post: {
+        tags: ['Inteligencia Artificial (NOVA AI)'],
+        summary: 'Análisis inteligente de un producto: perfil ideal, relación precio-calidad y recomendación de combo complementario',
+        parameters: [{ $ref: '#/components/parameters/TraceIdHeader' }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['codigo'],
+                properties: {
+                  codigo: {
+                    type: 'string',
+                    example: 'A-1001',
+                  },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description:
+              'Análisis detallado de NOVA AI sobre el artículo solicitado y su complemento sugerido con stock en tiempo real.',
+          },
+          503: { description: 'Servicio de catálogo temporalmente no disponible.' },
+        },
+      },
+    },
+    '/ia/resumir-opiniones': {
+      post: {
+        tags: ['Inteligencia Artificial (NOVA AI)'],
+        summary: 'Análisis de sentimiento y resumen con IA de las opiniones reales de los clientes en PostgreSQL',
+        parameters: [{ $ref: '#/components/parameters/TraceIdHeader' }],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: {
+                type: 'object',
+                required: ['codigo'],
+                properties: {
+                  codigo: {
+                    type: 'string',
+                    example: 'A-1001',
+                  },
+                },
+              },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description:
+              'Resumen ejecutivo generado por Google Gemini API sobre todos los comentarios guardados del producto.',
+          },
+          503: { description: 'Servicio temporalmente no disponible.' },
         },
       },
     },

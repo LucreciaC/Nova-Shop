@@ -50,14 +50,14 @@ async function runTests() {
     body: JSON.stringify({
       username: tempUsername,
       nombreCliente: 'Alumno Prueba SOA',
-      password: 'password123',
+      password: 'Password123',
     }),
   });
   console.log(`   -> Registro: HTTP ${reg.res.status} | Estado inicial: '${reg.data.estado}' (Esperado: inactivo)`);
 
   const loginInactivo = await request('/api/v1/auth/login', {
     method: 'POST',
-    body: JSON.stringify({ username: tempUsername, password: 'password123' }),
+    body: JSON.stringify({ username: tempUsername, password: 'Password123' }),
   });
   console.log(`   -> Intento login antes de activar: HTTP ${loginInactivo.res.status} (Esperado: 403 Forbidden)`);
 
@@ -81,7 +81,7 @@ async function runTests() {
 
   const loginActivo = await request('/api/v1/auth/login', {
     method: 'POST',
-    body: JSON.stringify({ username: tempUsername, password: 'password123' }),
+    body: JSON.stringify({ username: tempUsername, password: 'Password123' }),
   });
   console.log(`   -> Login tras activación: HTTP ${loginActivo.res.status} | JWT emitido correctamente\n`);
 
@@ -109,11 +109,11 @@ async function runTests() {
 
   const regC1 = await request('/api/v1/auth/registro', {
     method: 'POST',
-    body: JSON.stringify({ username: c1User, nombreCliente: 'Cliente Concurrente 1', password: 'password123' }),
+    body: JSON.stringify({ username: c1User, nombreCliente: 'Cliente Concurrente 1', password: 'Password123' }),
   });
   const regC2 = await request('/api/v1/auth/registro', {
     method: 'POST',
-    body: JSON.stringify({ username: c2User, nombreCliente: 'Cliente Concurrente 2', password: 'password123' }),
+    body: JSON.stringify({ username: c2User, nombreCliente: 'Cliente Concurrente 2', password: 'Password123' }),
   });
 
   await request(`/api/v1/usuarios/${regC1.data.id}/activacion`, {
@@ -129,11 +129,11 @@ async function runTests() {
 
   const loginCliente1 = await request('/api/v1/auth/login', {
     method: 'POST',
-    body: JSON.stringify({ username: c1User, password: 'password123' }),
+    body: JSON.stringify({ username: c1User, password: 'Password123' }),
   });
   const loginCliente2 = await request('/api/v1/auth/login', {
     method: 'POST',
-    body: JSON.stringify({ username: c2User, password: 'password123' }),
+    body: JSON.stringify({ username: c2User, password: 'Password123' }),
   });
 
   const tokenC1 = loginCliente1.data.accessToken;

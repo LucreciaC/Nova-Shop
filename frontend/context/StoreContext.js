@@ -132,6 +132,18 @@ export function StoreProvider({ children }) {
     if (circuitSt) setLastCircuitState(circuitSt);
 
     const data = await res.json().catch(() => ({}));
+
+    // Si el JWT de 15 minutos expiró (ADR-08) en una ruta protegida, limpiar la sesión vencida
+    if (res.status === 401 && activeToken && !path.includes('/auth/login')) {
+      setToken('');
+      setUsuario(null);
+      try {
+        localStorage.removeItem('nexo_token');
+        localStorage.removeItem('nexo_user');
+      } catch (_) {}
+      showToast('Tu sesión de 15 minutos expiró. Volvé a iniciar sesión.', 'warning');
+    }
+
     return { res, data, traceId: returnedTrace };
   }
 

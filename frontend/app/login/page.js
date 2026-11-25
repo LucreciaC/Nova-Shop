@@ -20,6 +20,57 @@ export default function LoginPage() {
   const [errorMsg, setErrorMsg] = useState('');
   const [infoMsg, setInfoMsg] = useState('');
 
+  const tieneMayuscula = /[A-Z]/.test(password);
+  const tieneMinuscula = /[a-z]/.test(password);
+  const tieneNumero = /[0-9]/.test(password);
+  const tieneLongitud = password.length >= 6;
+  const passwordCumpleReglas =
+    tieneMayuscula && tieneMinuscula && tieneNumero && tieneLongitud;
+
+  function renderPasswordChecklist() {
+    const itemStyle = (ok) => ({
+      display: 'flex',
+      alignItems: 'center',
+      gap: '0.4rem',
+      fontSize: '0.78rem',
+      fontWeight: 600,
+      color: ok ? '#16A34A' : '#6B7280',
+      transition: 'color 0.15s ease',
+    });
+
+    return (
+      <div
+        style={{
+          background: '#F9FAFB',
+          border: '1px solid #E5E7EB',
+          borderRadius: '0.75rem',
+          padding: '0.65rem 0.85rem',
+          marginBottom: '1rem',
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          gap: '0.35rem 0.5rem',
+        }}
+      >
+        <div style={itemStyle(tieneMayuscula)}>
+          <span>{tieneMayuscula ? '✓' : '○'}</span>
+          <span>Una mayúscula (A-Z)</span>
+        </div>
+        <div style={itemStyle(tieneMinuscula)}>
+          <span>{tieneMinuscula ? '✓' : '○'}</span>
+          <span>Una minúscula (a-z)</span>
+        </div>
+        <div style={itemStyle(tieneNumero)}>
+          <span>{tieneNumero ? '✓' : '○'}</span>
+          <span>Un número (0-9)</span>
+        </div>
+        <div style={itemStyle(tieneLongitud)}>
+          <span>{tieneLongitud ? '✓' : '○'}</span>
+          <span>Mínimo 6 caracteres</span>
+        </div>
+      </div>
+    );
+  }
+
   async function handleLoginSubmit(e) {
     e.preventDefault();
     setSubmitting(true);
@@ -60,6 +111,12 @@ export default function LoginPage() {
 
   async function handleRegistroSubmit(e) {
     e.preventDefault();
+    if (!passwordCumpleReglas) {
+      setErrorMsg(
+        'La contraseña debe tener al menos 6 caracteres e incluir una letra mayúscula, una minúscula y un número.',
+      );
+      return;
+    }
     setSubmitting(true);
     setErrorMsg('');
     setInfoMsg('');
@@ -80,6 +137,41 @@ export default function LoginPage() {
         setInfoMsg(
           `Tu cuenta '${data.username}' fue creada correctamente y se encuentra pendiente de activación por un Administrador.`,
         );
+        setMode('login');
+      }
+    } catch (err) {
+      setErrorMsg(err.message);
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  async function handleRecuperarSubmit(e) {
+    e.preventDefault();
+    if (!passwordCumpleReglas) {
+      setErrorMsg(
+        'La nueva contraseña debe tener al menos 6 caracteres e incluir una letra mayúscula, una minúscula y un número.',
+      );
+      return;
+    }
+    setSubmitting(true);
+    setErrorMsg('');
+    setInfoMsg('');
+    try {
+      const { res, data } = await apiRequest('/api/v1/auth/recuperar-password', {
+        method: 'POST',
+        body: JSON.stringify({
+          username: identifier,
+          email: email || undefined,
+          nuevaPassword: password,
+        }),
+      });
+
+      if (!res.ok) {
+        setErrorMsg(data.message || data.error || 'No se pudo restablecer la contraseña');
+      } else {
+        setInfoMsg(data.mensaje || 'Contraseña restablecida correctamente.');
+        setPassword('');
         setMode('login');
       }
     } catch (err) {
@@ -112,7 +204,11 @@ export default function LoginPage() {
                 color: 'var(--text)',
               }}
             >
-              {mode === 'login' ? 'Iniciá sesión' : 'Creá tu cuenta'}
+              {mode === 'login'
+                ? 'Iniciá sesión'
+                : mode === 'registro'
+                ? 'Creá tu cuenta'
+                : 'Recuperar contraseña'}
             </h1>
           </div>
 
@@ -234,11 +330,12 @@ export default function LoginPage() {
                     fontWeight: 600,
                     cursor: 'pointer',
                   }}
-                  onClick={() =>
-                    setInfoMsg(
-                      'Usá los botones rápidos de abajo para ingresar como Cliente, Administrador o probar una cuenta Inactiva.',
-                    )
-                  }
+                  onClick={() => {
+                    setMode('recuperar');
+                    setErrorMsg('');
+                    setInfoMsg('');
+                    setPassword('');
+                  }}
                 >
                   ¿Olvidaste tu contraseña?
                 </span>
@@ -282,7 +379,7 @@ export default function LoginPage() {
                 Crear una cuenta nueva
               </button>
             </form>
-          ) : (
+          ) : mode === 'registro' ? (
             <form onSubmit={handleRegistroSubmit}>
               <div className="nexo-input-group">
                 <svg
@@ -366,7 +463,7 @@ export default function LoginPage() {
                   <path d="M7 11V7a5 5 0 0 1 10 0v4" />
                 </svg>
                 <input
-                  type="password"
+                  type={showPass ? 'text' : 'password'}
                   className="nexo-input"
                   placeholder="Contraseña"
                   value={password}
@@ -375,11 +472,13 @@ export default function LoginPage() {
                 />
               </div>
 
+              {renderPasswordChecklist()}
+
               <button
                 type="submit"
                 className="nexo-btn-primary"
                 style={{ width: '100%', padding: '0.85rem', marginBottom: '1rem' }}
-                disabled={submitting}
+                disabled={submitting || !passwordCumpleReglas}
               >
                 {submitting ? 'Creando cuenta...' : 'Crear cuenta'}
               </button>
@@ -407,6 +506,102 @@ export default function LoginPage() {
                   }}
                 >
                   Iniciá sesión
+                </button>
+              </div>
+            </form>
+          ) : (
+            <form onSubmit={handleRecuperarSubmit}>
+              <p
+                style={{
+                  fontSize: '0.85rem',
+                  color: 'var(--text-muted)',
+                  marginBottom: '1rem',
+                  textAlign: 'center',
+                }}
+              >
+                Ingresá tu usuario o correo electrónico y elegí tu nueva contraseña.
+              </p>
+
+              <div className="nexo-input-group">
+                <svg
+                  className="nexo-input-icon"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                  <circle cx="12" cy="7" r="4" />
+                </svg>
+                <input
+                  type="text"
+                  className="nexo-input"
+                  placeholder="Nombre de usuario o correo registrado"
+                  value={identifier}
+                  onChange={(e) => setIdentifier(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="nexo-input-group">
+                <svg
+                  className="nexo-input-icon"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                </svg>
+                <input
+                  type={showPass ? 'text' : 'password'}
+                  className="nexo-input"
+                  placeholder="Nueva contraseña"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </div>
+
+              {renderPasswordChecklist()}
+
+              <button
+                type="submit"
+                className="nexo-btn-primary"
+                style={{ width: '100%', padding: '0.85rem', marginBottom: '1rem' }}
+                disabled={submitting || !passwordCumpleReglas}
+              >
+                {submitting ? 'Actualizando contraseña...' : 'Restablecer contraseña'}
+              </button>
+
+              <div
+                style={{
+                  textAlign: 'center',
+                  fontSize: '0.88rem',
+                  color: 'var(--text-muted)',
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMode('login');
+                    setErrorMsg('');
+                    setInfoMsg('');
+                  }}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: 'var(--primary)',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                  }}
+                >
+                  ← Volver a Iniciar sesión
                 </button>
               </div>
             </form>

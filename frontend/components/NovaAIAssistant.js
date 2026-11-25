@@ -6,15 +6,15 @@ import { useStore } from '../context/StoreContext';
 import { formatARS, ProductIllustration } from './ProductVisuals';
 
 const SUGERENCIAS_RAPIDAS = [
-  '¿Qué productos tienen para gaming?',
-  'Busco algo por menos de $150.000',
+  'Armame un combo gamer con $250.000',
+  'Comparar teclado y mouse',
   'Recomendame algo para estudiar o programar',
-  '¿Qué auriculares tienen con stock disponible?',
+  'Busco algo por menos de $150.000',
 ];
 
 export default function NovaAIAssistant() {
   const router = useRouter();
-  const { apiRequest, agregarAlCarrito } = useStore();
+  const { apiRequest, agregarAlCarrito, showToast } = useStore();
 
   const [abierto, setAbierto] = useState(false);
   const [input, setInput] = useState('');
@@ -23,7 +23,7 @@ export default function NovaAIAssistant() {
     {
       rol: 'ia',
       texto:
-        '¡Hola! Soy NOVA AI ✨. Consulto el stock y precios en PostgreSQL en tiempo real para recomendarte el producto ideal. ¿Qué estás buscando hoy?',
+        '¡Hola! Soy NOVA AI ✨. Consulto el stock y precios en PostgreSQL en tiempo real. Puedo armarte combos por presupuesto, comparar productos o recomendarte el equipo ideal. ¿En qué te ayudo?',
       productos: [],
     },
   ]);
@@ -51,7 +51,9 @@ export default function NovaAIAssistant() {
             productos: Array.isArray(data.productosRecomendados)
               ? data.productosRecomendados
               : [],
+            resumenCombo: data.resumenCombo || null,
             motor: data.motor,
+            instanciaConsultada: data.instanciaConsultada,
           },
         ]);
       } else {
@@ -80,6 +82,14 @@ export default function NovaAIAssistant() {
     }
   }
 
+  function agregarComboCompleto(productos) {
+    if (!Array.isArray(productos) || productos.length === 0) return;
+    productos.forEach((art, idx) => {
+      agregarAlCarrito(art, 1, idx === productos.length - 1);
+    });
+    showToast(`¡Combo de ${productos.length} productos agregado al carrito!`, 'success');
+  }
+
   return (
     <>
       {/* Botón Flotante para abrir NOVA AI */}
@@ -95,15 +105,15 @@ export default function NovaAIAssistant() {
           display: 'flex',
           alignItems: 'center',
           gap: '0.6rem',
-          padding: '0.85rem 1.25rem',
+          padding: '0.88rem 1.35rem',
           borderRadius: '9999px',
-          border: 'none',
-          background: 'linear-gradient(135deg, #6C5CE7 0%, #8B7CFF 100%)',
+          border: '1px solid rgba(255,255,255,0.25)',
+          background: 'linear-gradient(135deg, #4C1D95 0%, #6C5CE7 55%, #8B7CFF 100%)',
           color: '#FFFFFF',
           fontWeight: 700,
-          fontSize: '0.92rem',
+          fontSize: '0.93rem',
           cursor: 'pointer',
-          boxShadow: '0 14px 28px -6px rgba(108, 92, 231, 0.55)',
+          boxShadow: '0 16px 32px -6px rgba(108, 92, 231, 0.6)',
           transition: 'transform 0.2s ease',
         }}
       >
@@ -119,14 +129,14 @@ export default function NovaAIAssistant() {
             bottom: '5.25rem',
             right: '1.5rem',
             zIndex: 75,
-            width: '380px',
+            width: '400px',
             maxWidth: 'calc(100vw - 2rem)',
-            height: '540px',
+            height: '580px',
             maxHeight: 'calc(100vh - 7rem)',
             background: '#FFFFFF',
-            borderRadius: '1.35rem',
+            borderRadius: '1.4rem',
             border: '1px solid #ECEEF5',
-            boxShadow: '0 25px 50px -12px rgba(31, 41, 55, 0.28)',
+            boxShadow: '0 25px 50px -12px rgba(31, 41, 55, 0.3)',
             display: 'flex',
             flexDirection: 'column',
             overflow: 'hidden',
@@ -136,7 +146,7 @@ export default function NovaAIAssistant() {
           <div
             style={{
               padding: '1rem 1.25rem',
-              background: 'linear-gradient(135deg, #4C1D95 0%, #6C5CE7 100%)',
+              background: 'linear-gradient(135deg, #3B0764 0%, #6C5CE7 100%)',
               color: '#FFFFFF',
               display: 'flex',
               justifyContent: 'space-between',
@@ -146,24 +156,41 @@ export default function NovaAIAssistant() {
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.65rem' }}>
               <div
                 style={{
-                  width: 36,
-                  height: 36,
+                  width: 38,
+                  height: 38,
                   borderRadius: '50%',
                   background: 'rgba(255,255,255,0.2)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontSize: '1.1rem',
+                  fontSize: '1.15rem',
                 }}
               >
                 ✨
               </div>
               <div>
                 <div style={{ fontWeight: 800, fontSize: '0.98rem' }}>
-                  NOVA AI · Asistente SOA
+                  NOVA AI · Asistente Inteligente
                 </div>
-                <div style={{ fontSize: '0.73rem', color: '#EDE9FE' }}>
-                  Conectado al stock en tiempo real
+                <div
+                  style={{
+                    fontSize: '0.72rem',
+                    color: '#EDE9FE',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.35rem',
+                  }}
+                >
+                  <span
+                    style={{
+                      width: 7,
+                      height: 7,
+                      borderRadius: '50%',
+                      background: '#22C55E',
+                      display: 'inline-block',
+                    }}
+                  />
+                  <span>RAG conectado a PostgreSQL en vivo</span>
                 </div>
               </div>
             </div>
@@ -193,7 +220,7 @@ export default function NovaAIAssistant() {
               background: '#F7F7FB',
               display: 'flex',
               flexDirection: 'column',
-              gap: '0.85rem',
+              gap: '0.9rem',
             }}
           >
             {mensajes.map((m, idx) => (
@@ -201,26 +228,46 @@ export default function NovaAIAssistant() {
                 key={idx}
                 style={{
                   alignSelf: m.rol === 'usuario' ? 'flex-end' : 'flex-start',
-                  maxWidth: '90%',
+                  maxWidth: '93%',
                 }}
               >
                 <div
                   style={{
-                    padding: '0.75rem 0.95rem',
+                    padding: '0.78rem 0.98rem',
                     borderRadius:
                       m.rol === 'usuario'
                         ? '1rem 1rem 0.25rem 1rem'
                         : '1rem 1rem 1rem 0.25rem',
                     background: m.rol === 'usuario' ? '#6C5CE7' : '#FFFFFF',
                     color: m.rol === 'usuario' ? '#FFFFFF' : '#1F2937',
-                    fontSize: '0.86rem',
-                    lineHeight: 1.45,
+                    fontSize: '0.85rem',
+                    lineHeight: 1.48,
                     boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
                     border: m.rol === 'usuario' ? 'none' : '1px solid #ECEEF5',
                   }}
                 >
                   {m.texto.replace(/\*\*/g, '')}
                 </div>
+
+                {/* Etiqueta sutil de trazabilidad SOA (qué instancia respondió) */}
+                {m.instanciaConsultada && (
+                  <div
+                    style={{
+                      fontSize: '0.68rem',
+                      color: '#6B7280',
+                      marginTop: '0.25rem',
+                      paddingLeft: '0.25rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.35rem',
+                    }}
+                  >
+                    <span>⚡ Stock verificado vía</span>
+                    <strong style={{ color: '#6C5CE7' }}>
+                      {m.instanciaConsultada}
+                    </strong>
+                  </div>
+                )}
 
                 {/* Tarjetas de Productos Recomendados por la IA */}
                 {m.productos && m.productos.length > 0 && (
@@ -262,17 +309,18 @@ export default function NovaAIAssistant() {
                         >
                           <div
                             style={{
-                              width: 42,
-                              height: 42,
+                              width: 44,
+                              height: 44,
                               borderRadius: '0.5rem',
                               background: '#F3F4F8',
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
                               flexShrink: 0,
+                              overflow: 'hidden',
                             }}
                           >
-                            <ProductIllustration articulo={art} size={32} />
+                            <ProductIllustration articulo={art} size={44} />
                           </div>
                           <div>
                             <div
@@ -293,7 +341,7 @@ export default function NovaAIAssistant() {
                             >
                               {formatARS(art.precioUnitario)} ·{' '}
                               <span style={{ color: '#16A34A', fontWeight: 600 }}>
-                                Stock: {art.stock}
+                                {art.stock} disp.
                               </span>
                             </div>
                           </div>
@@ -319,6 +367,32 @@ export default function NovaAIAssistant() {
                         </button>
                       </div>
                     ))}
+
+                    {/* Si es un Combo armado por la IA, botón de 1 clic para llevar todo el combo */}
+                    {m.resumenCombo && m.productos.length >= 2 && (
+                      <button
+                        type="button"
+                        onClick={() => agregarComboCompleto(m.productos)}
+                        style={{
+                          marginTop: '0.2rem',
+                          background: 'linear-gradient(135deg, #22C55E 0%, #16A34A 100%)',
+                          color: '#FFFFFF',
+                          border: 'none',
+                          borderRadius: '0.75rem',
+                          padding: '0.6rem 0.9rem',
+                          fontSize: '0.8rem',
+                          fontWeight: 800,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '0.4rem',
+                          boxShadow: '0 6px 14px rgba(34, 197, 94, 0.3)',
+                        }}
+                      >
+                        <span>🛒 Agregar combo completo ({formatARS(m.resumenCombo.totalCombo)})</span>
+                      </button>
+                    )}
                   </div>
                 )}
               </div>
@@ -332,7 +406,7 @@ export default function NovaAIAssistant() {
                   fontStyle: 'italic',
                 }}
               >
-                NOVA AI está analizando el catálogo en tiempo real...
+                NOVA AI está consultando el catálogo en tiempo real...
               </div>
             )}
 
@@ -354,16 +428,16 @@ export default function NovaAIAssistant() {
                   style={{
                     background: '#EDE9FE',
                     color: '#5B21B6',
-                    border: 'none',
+                    border: '1px solid #DDD6FE',
                     borderRadius: '9999px',
-                    padding: '0.3rem 0.65rem',
+                    padding: '0.32rem 0.7rem',
                     fontSize: '0.73rem',
                     fontWeight: 600,
                     cursor: 'pointer',
                     textAlign: 'left',
                   }}
                 >
-                  {sug}
+                  ✨ {sug}
                 </button>
               ))}
             </div>
@@ -387,13 +461,13 @@ export default function NovaAIAssistant() {
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Preguntale a NOVA AI..."
+              placeholder="Ej: Armame un combo gamer con $250.000..."
               style={{
                 flex: 1,
                 padding: '0.6rem 0.85rem',
                 borderRadius: '9999px',
                 border: '1px solid #D1D5DB',
-                fontSize: '0.85rem',
+                fontSize: '0.84rem',
                 outline: 'none',
               }}
             />

@@ -655,38 +655,13 @@ export default function Navbar() {
               style={{
                 fontSize: '0.88rem',
                 color: 'var(--text-muted)',
-                marginBottom: '1rem',
+                marginBottom: '1.25rem',
               }}
             >
               {confirmedOrderModal.isReplay
                 ? 'Respuesta recuperada por Idempotency-Key (ADR-09): no se volvió a descontar el stock.'
                 : `Importe total: ${formatARS(confirmedOrderModal.importeTotal)} · Stock descontado en transacción SQL.`}
             </p>
-
-            {confirmedOrderModal.blockchain && (
-              <div
-                style={{
-                  background: '#F0FDF4',
-                  border: '1px solid #BBF7D0',
-                  borderRadius: '0.85rem',
-                  padding: '0.7rem 0.9rem',
-                  marginBottom: '1.25rem',
-                  textAlign: 'left',
-                  fontSize: '0.8rem',
-                  color: '#166534',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                }}
-              >
-                <span style={{ fontWeight: 700 }}>
-                  ⛓️ Compra protegida en Blockchain
-                </span>
-                <span style={{ fontWeight: 800 }}>
-                  Bloque #{confirmedOrderModal.blockchain.blockIndex} · ✓ Verificado
-                </span>
-              </div>
-            )}
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
               <button

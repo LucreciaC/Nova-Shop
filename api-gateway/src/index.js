@@ -6,7 +6,11 @@ const cors = require('cors');
 const jwt = require('jsonwebtoken');
 const CircuitBreaker = require('./circuit-breaker');
 const openapiSpecification = require('./openapi');
-const { procesarConsultaAsistenteIA } = require('./ai-assistant');
+const {
+  procesarConsultaAsistenteIA,
+  procesarAnalisisProductoIA,
+  procesarResumenOpinionesIA,
+} = require('./ai-assistant');
 
 const app = express();
 app.use(
@@ -322,6 +326,10 @@ app.post('/api/v1/auth/registro', (req, res) => {
   return proxyRequest(req, res, IDENTITY_SERVICE_URL, identityBreaker);
 });
 
+app.post('/api/v1/auth/recuperar-password', (req, res) => {
+  return proxyRequest(req, res, IDENTITY_SERVICE_URL, identityBreaker);
+});
+
 app.get('/api/v1/auth/jwks', (req, res) => {
   return proxyRequest(req, res, IDENTITY_SERVICE_URL, identityBreaker);
 });
@@ -356,30 +364,35 @@ app.all('/api/v1/pedidos*', validateJwtMiddleware, (req, res) => {
 });
 
 /**
- * Servicio de Inteligencia Artificial SOA (/api/v1/ia/asistente)
+ * Servicio de Inteligencia Artificial SOA (/api/v1/ia/asistente y /api/v1/ia/analizar-producto)
  * Consulta en tiempo real el catálogo de Ventas vía Circuit Breaker + Load Balancer y aplica RAG
  */
+async function obtenerCatalogoDesdeVentasConBreaker(req, res) {
+  const target = getNextVentasInstanceUrl();
+  const upstreamRes = await ventasBreaker.execute((signal) =>
+    fetch(`${target}/api/v1/articulos`, {
+      headers: { 'X-Trace-ID': req.traceId },
+      signal,
+    }),
+  );
+  const ventasInstance = upstreamRes.headers.get('x-ventas-instance') || target;
+  if (ventasInstance) {
+    res.setHeader('X-Ventas-Instance', ventasInstance);
+  }
+  const data = await upstreamRes.json();
+  return {
+    catalogo: Array.isArray(data) ? data : [],
+    ventasInstance,
+  };
+}
+
 app.post('/api/v1/ia/asistente', async (req, res) => {
   try {
     const mensaje = req.body?.mensaje || '';
-    const target = getNextVentasInstanceUrl();
 
     const resultado = await procesarConsultaAsistenteIA({
       mensaje,
-      obtenerCatalogoFn: async () => {
-        const upstreamRes = await ventasBreaker.execute((signal) =>
-          fetch(`${target}/api/v1/articulos`, {
-            headers: { 'X-Trace-ID': req.traceId },
-            signal,
-          }),
-        );
-        const ventasInstance = upstreamRes.headers.get('x-ventas-instance');
-        if (ventasInstance) {
-          res.setHeader('X-Ventas-Instance', ventasInstance);
-        }
-        const data = await upstreamRes.json();
-        return Array.isArray(data) ? data : [];
-      },
+      obtenerCatalogoFn: () => obtenerCatalogoDesdeVentasConBreaker(req, res),
     });
 
     res.setHeader('X-Circuit-State', ventasBreaker.state);
@@ -391,6 +404,81 @@ app.post('/api/v1/ia/asistente', async (req, res) => {
     return res.status(503).json({
       error: 'Service Unavailable',
       message: `El asistente IA no pudo consultar el catálogo en este momento: ${err.message}`,
+      traceId: req.traceId,
+    });
+  }
+});
+
+app.post('/api/v1/ia/analizar-producto', async (req, res) => {
+  try {
+    const codigo = req.body?.codigo || 'A-1001';
+
+    const resultado = await procesarAnalisisProductoIA({
+      codigo,
+      obtenerCatalogoFn: () => obtenerCatalogoDesdeVentasConBreaker(req, res),
+    });
+
+    res.setHeader('X-Circuit-State', ventasBreaker.state);
+    return res.status(200).json({
+      ...resultado,
+      traceId: req.traceId,
+    });
+  } catch (err) {
+    return res.status(503).json({
+      error: 'Service Unavailable',
+      message: `No se pudo analizar el producto con NOVA AI: ${err.message}`,
+      traceId: req.traceId,
+    });
+  }
+});
+
+app.post('/api/v1/ia/resumir-opiniones', async (req, res) => {
+  try {
+    const codigo = String(req.body?.codigo || 'A-1001').trim().toUpperCase();
+
+    const resultado = await procesarResumenOpinionesIA({
+      codigo,
+      obtenerDatosOpinionesFn: async () => {
+        const target = getNextVentasInstanceUrl();
+        const [artRes, comRes] = await Promise.all([
+          ventasBreaker.execute((signal) =>
+            fetch(`${target}/api/v1/articulos/${codigo}`, {
+              headers: { 'X-Trace-ID': req.traceId },
+              signal,
+            }),
+          ),
+          ventasBreaker.execute((signal) =>
+            fetch(`${target}/api/v1/articulos/${codigo}/comentarios`, {
+              headers: { 'X-Trace-ID': req.traceId },
+              signal,
+            }),
+          ),
+        ]);
+        const ventasInstance =
+          comRes.headers.get('x-ventas-instance') ||
+          artRes.headers.get('x-ventas-instance') ||
+          target;
+        res.setHeader('X-Ventas-Instance', ventasInstance);
+
+        const producto = await artRes.json().catch(() => ({ codigo }));
+        const comentarios = await comRes.json().catch(() => []);
+        return {
+          producto,
+          comentarios: Array.isArray(comentarios) ? comentarios : [],
+          ventasInstance,
+        };
+      },
+    });
+
+    res.setHeader('X-Circuit-State', ventasBreaker.state);
+    return res.status(200).json({
+      ...resultado,
+      traceId: req.traceId,
+    });
+  } catch (err) {
+    return res.status(503).json({
+      error: 'Service Unavailable',
+      message: `No se pudieron resumir las opiniones con NOVA AI: ${err.message}`,
       traceId: req.traceId,
     });
   }

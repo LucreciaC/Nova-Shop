@@ -4,7 +4,9 @@ import {
   Get,
   Param,
   Patch,
+  Post,
   Put,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -68,5 +70,29 @@ export class CatalogoController {
     @Body() body: { stock?: number; ajuste?: number },
   ) {
     return this.catalogoService.ajustarStock(codigo, body);
+  }
+
+  /**
+   * GET /api/v1/articulos/:codigo/comentarios
+   * Consultar reseñas y comentarios de clientes sobre un producto
+   */
+  @Get(':codigo/comentarios')
+  async listarComentarios(@Param('codigo') codigo: string) {
+    return this.catalogoService.listarComentarios(codigo);
+  }
+
+  /**
+   * POST /api/v1/articulos/:codigo/comentarios
+   * Publicar un comentario y calificación (1 a 5 estrellas) sobre un producto (Usuario autenticado)
+   */
+  @Post(':codigo/comentarios')
+  @UseGuards(JwtAuthGuard)
+  @Roles('cliente', 'administrador')
+  async agregarComentario(
+    @Param('codigo') codigo: string,
+    @Req() req: any,
+    @Body() body: { calificacion?: number; texto?: string },
+  ) {
+    return this.catalogoService.agregarComentario(codigo, req.user, body);
   }
 }

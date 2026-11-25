@@ -4,7 +4,11 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { ArticuloEntity, ArticuloRepository } from './articulo.repository';
+import {
+  ArticuloEntity,
+  ArticuloRepository,
+  ComentarioArticuloEntity,
+} from './articulo.repository';
 
 @Injectable()
 export class CatalogoService {
@@ -110,5 +114,38 @@ export class CatalogoService {
     throw new BadRequestException(
       "Debe especificar el campo 'stock' (valor absoluto entero >= 0) o 'ajuste' (variación entera).",
     );
+  }
+
+  async listarComentarios(codigo: string): Promise<ComentarioArticuloEntity[]> {
+    return this.articuloRepo.findComentariosByCodigo(codigo);
+  }
+
+  async agregarComentario(
+    codigo: string,
+    userPayload: { usuario: string; nombreCliente?: string },
+    body: { calificacion?: number; texto?: string },
+  ): Promise<ComentarioArticuloEntity> {
+    const art = await this.articuloRepo.findByCodigo(codigo.trim().toUpperCase());
+    if (!art) {
+      throw new NotFoundException(`El artículo '${codigo}' no existe.`);
+    }
+
+    const texto = String(body?.texto || '').trim();
+    if (!texto || texto.length < 3) {
+      throw new BadRequestException('El comentario debe tener al menos 3 caracteres.');
+    }
+
+    const calificacion = Number(body?.calificacion ?? 5);
+    if (!Number.isInteger(calificacion) || calificacion < 1 || calificacion > 5) {
+      throw new BadRequestException('La calificación debe ser un número entero entre 1 y 5.');
+    }
+
+    return this.articuloRepo.crearComentario({
+      codigoArticulo: art.codigo,
+      usuario: userPayload.usuario,
+      nombreCliente: userPayload.nombreCliente || userPayload.usuario,
+      calificacion,
+      texto,
+    });
   }
 }

@@ -96,8 +96,9 @@ La especificación completa OpenAPI 3.0.3 se encuentra en [`api-gateway/src/open
 
 | Método y Ruta | Servicio Destino | Autenticación / Rol | Descripción y Códigos de Respuesta |
 | :--- | :--- | :--- | :--- |
-| `POST /api/v1/auth/registro` | Identidad (`:3001`) | Público | Registra un usuario con rol `cliente` y estado `inactivo` (`201`, `400`, `409`). |
+| `POST /api/v1/auth/registro` | Identidad (`:3001`) | Público | Registra un usuario con rol `cliente`, contraseña segura (mayúscula, minúscula, número y >= 6 caracteres) y estado `inactivo` (`201`, `400`, `409`). |
 | `POST /api/v1/auth/login` | Identidad (`:3001`) | Público (con Rate Limit) | Autentica usuarios activos y emite JWT `RS256` por 15 min (`200`, `401`, `403` si inactivo, `429`). |
+| `POST /api/v1/auth/recuperar-password` | Identidad (`:3001`) | Público | Restablece la contraseña en MongoDB validando complejidad segura (`200`, `400`, `404`). |
 | `GET /api/v1/auth/jwks` | Identidad (`:3001`) | Público | Publica la clave pública RSA en formato JWK (`200`). |
 | `GET /api/v1/usuarios?estado=inactivo` | Identidad (`:3001`) | JWT (`administrador`) | Lista usuarios filtrados por estado sin campos sensibles (`200`, `401`, `403`). |
 | `PATCH /api/v1/usuarios/:id/activacion` | Identidad (`:3001`) | JWT (`administrador`) | Activa o desactiva una cuenta en MongoDB (`200`, `400`, `401`, `403`, `404`). |
@@ -105,9 +106,13 @@ La especificación completa OpenAPI 3.0.3 se encuentra en [`api-gateway/src/open
 | `GET /api/v1/articulos/:codigo` | Ventas (`:3002/:3003`) | Público | Devuelve el detalle de un artículo por su código (`200`, `404`). |
 | `PUT /api/v1/articulos/:codigo` | Ventas (`:3002/:3003`) | JWT (`administrador`) | Crea o actualiza un artículo del catálogo (`200`, `401`, `403`). |
 | `PATCH /api/v1/articulos/:codigo/stock` | Ventas (`:3002/:3003`) | JWT (`administrador`) | Ajusta el stock entero no negativo de un artículo (`200`, `400`, `403`, `404`). |
+| `GET /api/v1/articulos/:codigo/comentarios` | Ventas (`:3002/:3003`) | Público | Lista las reseñas y calificaciones de clientes sobre un producto (`200`). |
+| `POST /api/v1/articulos/:codigo/comentarios` | Ventas (`:3002/:3003`) | JWT (`cliente`/`admin`) | Publica un comentario y calificación de 1 a 5 estrellas en PostgreSQL (`201`, `400`, `401`). |
 | `POST /api/v1/pedidos` | Ventas (`:3002/:3003`) | JWT (`cliente`/`admin`) + `Idempotency-Key` | Confirma un pedido en transacción SQL y descuenta stock (`201`, `200` replay, `400`, `401`, `404`, `409`). |
 | `GET /api/v1/pedidos` | Ventas (`:3002/:3003`) | JWT (`cliente`/`admin`) | Lista los pedidos propios del cliente o todos si es administrador (`200`, `401`). |
 | `GET /api/v1/pedidos/:numero` | Ventas (`:3002/:3003`) | JWT (`cliente`/`admin`) | Consulta un pedido específico verificando propiedad (`200`, `403`, `404`). |
+| `POST /api/v1/ia/asistente` | API Gateway + Gemini API | Público | Asistente conversacional NOVA AI con patrón RAG sobre el catálogo de Ventas (`200`, `503`). |
+| `POST /api/v1/ia/analizar-producto` | API Gateway + Gemini API | Público | Análisis inteligente de producto y recomendación de combo con Google Gemini API (`200`, `503`). |
 
 ---
 
